@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --bg: #060F1E;
@@ -924,6 +925,112 @@ let CASES = [
 ];
 
 // ══════════════════════════════════════
+//  SUPABASE CONFIG
+// ══════════════════════════════════════
+const SUPABASE_URL  = 'https://ibxhwhqdqwpuxbeerhkw.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlieGh3aHFkcXdwdXhiZWVyaGt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTY0NjcsImV4cCI6MjA4OTU5MjQ2N30.arYoMo7G4rVjGP1XqsOCBQvaePjsTANUygxywxlAH8Y';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// Mapeia linha do Supabase → formato interno CASES
+function mapSupabaseCaso(row) {
+  return {
+    id:          row.numero || row.id,
+    contrato:    row.contrato,
+    devedor: {
+      nome:      row.devedores?.nome || '—',
+      cpf:       row.devedores?.cpf  || '—',
+      tel:       row.devedores?.telefone || ''
+    },
+    veiculo: {
+      marca:     row.veiculos?.marca || '—',
+      modelo:    row.veiculos?.modelo || '—',
+      ano:       row.veiculos?.ano_fab || 0,
+      placa:     row.veiculos?.placa || '—',
+      renavam:   row.veiculos?.renavam || '',
+      chassi:    row.veiculos?.chassi  || '',
+      cor:       row.veiculos?.cor     || ''
+    },
+    valorDivida:  row.valor_divida   || 0,
+    fipe:         row.veiculos?.fipe_valor || 0,
+    stage:        row.stage          || 'inadimplencia',
+    dInicio:      row.data_inicio    || new Date().toISOString().split('T')[0],
+    dStage:       row.data_stage_atual || new Date().toISOString().split('T')[0],
+    estado:       row.veiculos?.estado_uf || '—',
+    prioridade:   row.prioridade     || 'media',
+    responsavel:  row.usuarios?.nome || 'Analista',
+    debitos:      { ipva:0, dpvat:0, multas:0, taxas:0 },
+    historico:    []
+  };
+}
+
+async function loadFromSupabase() {
+  try {
+    const { data, error } = await sb
+      .from('casos')
+      .select(`
+        *,
+        devedores ( nome, cpf, telefone ),
+        veiculos  ( marca, modelo, ano_fab, placa, renavam, chassi, cor, fipe_valor, estado_uf ),
+        usuarios  ( nome )
+      `)
+      .order('criado_em', { ascending: false })
+      .limit(200);
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      CASES.length = 0;
+      data.forEach(row => CASES.push(mapSupabaseCaso(row)));
+      showToast('success', `✅ Supabase: ${CASES.length} casos carregados do banco`);
+    } else {
+      showToast('info', 'ℹ️ Supabase conectado — banco vazio, exibindo dados demo');
+    }
+  } catch (err) {
+    console.error('Supabase load error:', err);
+    showToast('warning', '⚠️ Supabase: usando dados demo (verifique RLS ou conexão)');
+  }
+}
+
+async function saveToSupabase(devedor, veiculo, caso) {
+  try {
+    // 1. Upsert devedor
+    const { data: devData, error: devErr } = await sb
+      .from('devedores')
+      .upsert({ nome: devedor.nome, cpf: devedor.cpf }, { onConflict: 'cpf' })
+      .select('id').single();
+    if (devErr) throw devErr;
+
+    // 2. Upsert veículo
+    const { data: veiData, error: veiErr } = await sb
+      .from('veiculos')
+      .upsert({ marca: veiculo.marca, modelo: veiculo.modelo, ano_fab: veiculo.ano,
+                placa: veiculo.placa.toUpperCase(), estado_uf: caso.estado },
+               { onConflict: 'placa' })
+      .select('id').single();
+    if (veiErr) throw veiErr;
+
+    // 3. Insert caso
+    const { error: casoErr } = await sb.from('casos').insert({
+      numero:      caso.id,
+      contrato:    caso.contrato,
+      devedor_id:  devData.id,
+      veiculo_id:  veiData.id,
+      valor_divida: caso.valorDivida,
+      stage:       'inadimplencia',
+      prioridade:  caso.prioridade,
+      data_inicio: caso.dInicio,
+      data_stage_atual: caso.dStage
+    });
+    if (casoErr) throw casoErr;
+
+    showToast('success', `✅ Caso ${caso.id} salvo no Supabase!`);
+  } catch (err) {
+    console.error('Supabase save error:', err);
+    showToast('warning', `⚠️ Salvo localmente — erro Supabase: ${err.message}`);
+  }
+}
+
+// ══════════════════════════════════════
 //  APP STATE
 // ══════════════════════════════════════
 let STATE = {
@@ -977,10 +1084,8 @@ function doLogin(){
     document.getElementById('api-text').innerHTML='IA <span style="color:var(--cyan)">Claude API</span>';
   }
   
-  // Update portfolio badge
+  // Init views with demo data first, then reload from Supabase
   document.getElementById('portfolio-badge').textContent=CASES.length;
-  
-  // Init views
   renderDashboard();
   renderPortfolio();
   renderAgents();
@@ -988,8 +1093,16 @@ function doLogin(){
   renderRelatorios();
   renderIntegracoes();
   
-  showToast('success',`✅ Bem-vinda, ${name.split(' ')[0]}! Portfólio com ${CASES.length} casos ativos.`);
-  setTimeout(()=>showToast('info','🤖 Supervisor Agent: 3 casos precisam de atenção hoje'),2500);
+  showToast('info',`👋 Bem-vindo(a), ${name.split(' ')[0]}! Conectando ao Supabase...`);
+
+  // Load real data from Supabase
+  loadFromSupabase().then(()=>{
+    document.getElementById('portfolio-badge').textContent=CASES.length;
+    renderDashboard();
+    renderPortfolio();
+  });
+
+  setTimeout(()=>showToast('info','🤖 Supervisor Agent: 3 casos precisam de atenção hoje'),3500);
 }
 
 // ══════════════════════════════════════
@@ -1854,6 +1967,8 @@ function createCase(){
   showToast('success',`✅ Caso ${newId} criado! Workflow iniciado automaticamente.`);
   renderPortfolio();
   renderDashboard();
+  // Persist to Supabase
+  saveToSupabase(newCase.devedor, newCase.veiculo, newCase);
   setTimeout(()=>showToast('info',`🤖 Risk Agent: Score de risco calculado para ${newId}`),2000);
 }
 
