@@ -258,10 +258,10 @@ function renderBlipDashStrip(){
     + '<div class="blip-dash-strip-title">💬 Blip Hub — Conversas Ativas</div>'
     + '<div style="display:flex;align-items:center;gap:10px;">'
     + '<div class="blip-dash-strip-live">Ao Vivo · 23 chats</div>'
-    + '<button class="blip-shortcut-btn sm" onclick="navigate('bliphub')">Ver todos →</button>'
+    + '<button class="blip-shortcut-btn sm" onclick="navigate(&apos;bliphub&apos;)">Ver todos</button>'
     + '</div></div><div class="blip-conv-row">';
   chips.forEach(function(c){
-    html += '<div class="blip-conv-chip" onclick="openBlipTab(''+c.key+'')">'
+    html += '<div class="blip-conv-chip" onclick="openBlipTab(&apos;'+c.key+'&apos;)">'
       + '<div class="blip-conv-chip-ico">'+c.ico+'</div>'
       + '<div style="min-width:0;flex:1">'
       + '<div class="blip-conv-chip-name">'+c.name+'</div>'
