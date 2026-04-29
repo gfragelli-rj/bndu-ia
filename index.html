@@ -216,6 +216,13 @@ function bhAssumeChat(){
 // ── Blip Hub shortcuts ──────────────────────────────────────
 function openBlipForCase(caseId, e){
   if(e && e.stopPropagation) e.stopPropagation();
+  // Close any open panels/overlays first
+  try { closePanel(); } catch(ex){}
+  var el = document.getElementById('panel-overlay');
+  if(el) el.classList.remove('open');
+  var cp = document.getElementById('case-panel');
+  if(cp) cp.classList.remove('open');
+
   var c = CASES.find(function(x){ return x.id===caseId; });
   var chatMap = {
     inadimplencia:'devedor', negociacao:'devedor', execucao:'devedor',
@@ -224,10 +231,9 @@ function openBlipForCase(caseId, e){
     leilao:'leiloeira', baixa:'analista'
   };
   var chatKey = c ? (chatMap[c.stage] || 'devedor') : 'devedor';
-  navigate('bliphub');
   bhCurrentChat = chatKey;
-  renderBlipHub();
-  var labels = {devedor:'Devedor', reboque:'Reboque', patio:'Patio', leiloeira:'Leiloeira', analista:'Analista'};
+  navigate('bliphub');  // navigate calls renderBlipHub() via the view===bliphub check
+  var labels = {devedor:'Devedor', reboque:'Reboque', patio:'Pátio', leiloeira:'Leiloeira', analista:'Analista'};
   showToast('info', '💬 Blip Hub — ' + (labels[chatKey]||chatKey) + (c?' · '+c.id:''));
 }
 
@@ -402,6 +408,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 /* ── VIEW CONTAINER ── */
 .view-container{flex:1;overflow-y:auto;position:relative;}
 .view{display:none;padding:24px;height:100%;}
+#view-bliphub{display:none;padding:0;height:auto;}
 .view.active{display:block;}
 
 /* ══════════════════════════════════════
@@ -867,7 +874,36 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .blip-int-metrics-full{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:10px;}
 
 
-#view-bliphub.active{display:flex!important;}
+#view-bliphub.active{
+  display:flex!important;
+  flex-direction:column!important;
+  height:calc(100vh - 60px)!important;
+  max-height:calc(100vh - 60px)!important;
+  overflow:hidden;
+  padding:16px 20px!important;
+}
+#view-bliphub .blip-hub-header{flex-shrink:0;}
+#view-bliphub .blip-chat-wrap{
+  flex:1!important;
+  min-height:0!important;
+  height:auto!important;
+  overflow:hidden;
+}
+#view-bliphub .bh-list{
+  height:100%;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+#view-bliphub .bh-list-body{flex:1;overflow-y:auto;min-height:0;}
+#view-bliphub .bh-window{
+  flex:1;
+  display:flex!important;
+  flex-direction:column;
+  overflow:hidden;
+  min-height:0;
+}
+#view-bliphub .bh-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;}
 
 
 /* ── Blip Hub shortcuts ── */
@@ -1086,7 +1122,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 
 
       <!-- ── BLIP HUB VIEW ── -->
-      <div class="view" id="view-bliphub" style="padding:20px;height:100%;display:none;flex-direction:column;">
+      <div class="view" id="view-bliphub" style="">
         <!-- Header stats -->
         <div class="blip-hub-header">
           <div class="blip-hub-top">
