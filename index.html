@@ -772,7 +772,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .blip-tab.active{background:var(--bg2);color:var(--text);border-color:var(--border);}
 .blip-tab:hover:not(.active){color:var(--text2);}
 
-.blip-chat-wrap{display:flex;flex:1;border:1px solid var(--border);border-radius:0 10px 10px 10px;overflow:hidden;background:var(--bg2);height:calc(100vh - var(--header-h) - 48px - 220px);}
+.blip-chat-wrap{display:flex;flex:1;min-height:0;border:1px solid var(--border);border-radius:0 10px 10px 10px;overflow:hidden;background:var(--bg2);height:calc(100vh - 340px);}
 
 .bh-list{width:270px;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
 .bh-list-search{padding:12px;border-bottom:1px solid var(--border);}
@@ -1038,7 +1038,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 
 
       <!-- ── BLIP HUB VIEW ── -->
-      <div class="view" id="view-bliphub" style="padding:20px;height:100%;display:none;flex-direction:column;">
+      <div class="view" id="view-bliphub" style="padding:20px;height:calc(100vh - 60px);display:none;flex-direction:column;overflow:hidden;">
         <!-- Header stats -->
         <div class="blip-hub-header">
           <div class="blip-hub-top">
@@ -1538,6 +1538,9 @@ function navigate(view){
   };
   const t=titles[view]||['BNDU.ia',''];
   document.getElementById('header-title').innerHTML=t[0]+` <span>${t[1]}</span>`;
+
+  // Re-render Blip Hub every time the view is activated so list + chat are always populated
+  if(view==='bliphub') renderBlipHub();
 }
 
 // ══════════════════════════════════════
