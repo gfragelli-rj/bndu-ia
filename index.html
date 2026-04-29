@@ -772,7 +772,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .blip-tab.active{background:var(--bg2);color:var(--text);border-color:var(--border);}
 .blip-tab:hover:not(.active){color:var(--text2);}
 
-.blip-chat-wrap{display:flex;flex:1;min-height:0;border:1px solid var(--border);border-radius:0 10px 10px 10px;overflow:hidden;background:var(--bg2);height:calc(100vh - 340px);}
+.blip-chat-wrap{display:flex;flex:1;border:1px solid var(--border);border-radius:0 10px 10px 10px;overflow:hidden;background:var(--bg2);height:calc(100vh - var(--header-h) - 48px - 220px);}
 
 .bh-list{width:270px;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
 .bh-list-search{padding:12px;border-bottom:1px solid var(--border);}
@@ -1038,7 +1038,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 
 
       <!-- ── BLIP HUB VIEW ── -->
-      <div class="view" id="view-bliphub" style="padding:20px;height:calc(100vh - 60px);display:none;flex-direction:column;overflow:hidden;">
+      <div class="view" id="view-bliphub" style="padding:20px;height:100%;display:none;flex-direction:column;">
         <!-- Header stats -->
         <div class="blip-hub-header">
           <div class="blip-hub-top">
@@ -1460,20 +1460,19 @@ function doLogin(){
   if(!STATE.role){showToast('warning','Selecione seu perfil de acesso');return;}
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').classList.add('visible');
-
+  
+  // Set user info
   const name=ROLE_NAMES[STATE.role];
   document.getElementById('sidebar-name').textContent=name;
   document.getElementById('sidebar-role').textContent=ROLE_LABELS[STATE.role];
   document.getElementById('sidebar-avatar').textContent=name.charAt(0);
-
-  // Auto-prompt for API key if not configured
-  const keyInvalid = !STATE.apiKey || STATE.apiKey.trim()==='';
-  if(keyInvalid){
+  
+  // Auto-prompt for API key if missing
+  const _keyOk = STATE.apiKey && STATE.apiKey.trim() !== '';
+  if(!_keyOk){
     setTimeout(()=>{
       const k = window.prompt(
-        '🔑 Cole aqui sua chave da API Claude (começa com sk-ant-api03-)\n\n'+
-        'Você encontra em: console.anthropic.com → Settings → API Keys\n\n'+
-        'A chave será salva no seu navegador automaticamente.'
+        '\u{1F511} Cole sua chave da API Claude (sk-ant-api03-)\n\nObtenha em: console.anthropic.com -> Settings -> API Keys\n\nSera salva no navegador automaticamente.'
       );
       if(k){
         const clean = k.replace(/[^\x20-\x7E]/g,'').trim();
@@ -1481,18 +1480,18 @@ function doLogin(){
           STATE.apiKey=clean;
           localStorage.setItem('bndu_api_key',clean);
           document.getElementById('api-dot').style.background='var(--cyan)';
-          document.getElementById('api-text').innerHTML='IA <span style="color:var(--cyan)">Claude API ✅</span>';
-          showToast('success','✅ Chave configurada! Agentes respondem com Claude.');
+          document.getElementById('api-text').innerHTML='IA <span style="color:var(--cyan)">Claude API OK</span>';
+          showToast('success','Chave configurada! Agentes respondem com Claude.');
         } else {
-          showToast('error','⚠️ Chave inválida. Configure em Configurações.');
+          showToast('error','Chave invalida. Configure em Configuracoes.');
         }
       }
     }, 800);
   } else {
     document.getElementById('api-dot').style.background='var(--cyan)';
-    document.getElementById('api-text').innerHTML='IA <span style="color:var(--cyan)">Claude API ✅</span>';
+    document.getElementById('api-text').innerHTML='IA <span style="color:var(--cyan)">Claude API OK</span>';
   }
-
+  // Init views with demo data first, then reload from Supabase
   document.getElementById('portfolio-badge').textContent=CASES.length;
   renderDashboard();
   renderPortfolio();
@@ -1501,13 +1500,16 @@ function doLogin(){
   renderRelatorios();
   renderIntegracoes();
   renderBlipHub();
-
+  
   showToast('info',`👋 Bem-vindo(a), ${name.split(' ')[0]}! Conectando ao Supabase...`);
+
+  // Load real data from Supabase
   loadFromSupabase().then(()=>{
     document.getElementById('portfolio-badge').textContent=CASES.length;
     renderDashboard();
     renderPortfolio();
   });
+
   setTimeout(()=>showToast('info','🤖 Supervisor Agent: 3 casos precisam de atenção hoje'),3500);
   setTimeout(()=>showToast('success','💬 Blip Hub: Reboque SP #47 confirmou OS — ETA 25min'),6000);
   setTimeout(()=>showToast('info','💬 Blip Hub: Analista, aprovação necessária — reserva leilão BND-007'),10000);
@@ -1538,8 +1540,6 @@ function navigate(view){
   };
   const t=titles[view]||['BNDU.ia',''];
   document.getElementById('header-title').innerHTML=t[0]+` <span>${t[1]}</span>`;
-
-  // Re-render Blip Hub every time the view is activated so list + chat are always populated
   if(view==='bliphub') renderBlipHub();
 }
 
@@ -2121,38 +2121,34 @@ async function sendToAgent(){
 
   let reply='';
 
-  if(STATE.apiKey){
+  if(STATE.apiKey && STATE.apiKey.trim()!==''){
     try{
-      // Build rich portfolio context with all case data
       const caseLines=CASES.map(c=>
         `[${c.id}] ${c.veiculo.marca} ${c.veiculo.modelo} ${c.veiculo.ano}`+
         ` | Devedor: ${c.devedor.nome}`+
-        ` | Dívida: ${fmtCurrency(c.valorDivida)}`+
+        ` | Divida: ${fmtCurrency(c.valorDivida)}`+
         ` | FIPE: ${fmtCurrency(c.fipe)}`+
         ` | Fase: ${c.stage}`+
         ` | Estado: ${c.estado}`+
         ` | Prioridade: ${c.prioridade}`
       ).join('\n');
-
-      const portfolioContext=
-        `=== PORTFÓLIO BNDU ===\n`+
-        `Total de casos: ${CASES.length}\n`+
-        `Carteira total: ${fmtCurrency(CASES.reduce((s,c)=>s+c.valorDivida,0))}\n`+
-        `Alta prioridade: ${CASES.filter(c=>c.prioridade==='alta').length} casos\n`+
+      const portfolioCtx=
+        `=== PORTFOLIO BNDU ===\n`+
+        `Total: ${CASES.length} casos\n`+
+        `Carteira: ${fmtCurrency(CASES.reduce((s,c)=>s+c.valorDivida,0))}\n`+
+        `Alta prioridade: ${CASES.filter(c=>c.prioridade==='alta').length}\n`+
         `Por fase: ${STAGES.map(s=>`${s.label}=${CASES.filter(c=>c.stage===s.id).length}`).join(' | ')}\n\n`+
-        `=== CASOS DETALHADOS ===\n${caseLines}`;
+        `CASOS:\n${caseLines}`;
 
-      // Full conversation history for multi-turn memory
       const history=STATE.agentMessages[STATE.selectedAgent];
       const messages=history.map(m=>({
         role: m.role==='user'?'user':'assistant',
         content: m.role==='user'
-          ? `${portfolioContext}\n\n=== PERGUNTA ===\n${m.text}`
+          ? `${portfolioCtx}\n\nPERGUNTA: ${m.text}`
           : m.text
       }));
 
       const cleanKey=STATE.apiKey.replace(/[^\x20-\x7E]/g,'').trim();
-
       const resp=await fetch('https://api.anthropic.com/v1/messages',{
         method:'POST',
         headers:{
@@ -2168,25 +2164,24 @@ async function sendToAgent(){
           messages
         })
       });
-
       const data=await resp.json();
       if(data.error){
-        reply=`⚠️ Erro Claude (${data.error.type}): ${data.error.message}`;
+        reply=`Erro Claude (${data.error.type}): ${data.error.message}`;
       } else {
-        reply=data.content?.[0]?.text||'Resposta vazia da API.';
+        reply=data.content?.[0]?.text||'Resposta vazia.';
       }
-
     } catch(e){
-      reply=`⚠️ Erro de conexão: ${e.message}`;
+      reply=`Erro de conexao: ${e.message}`;
     }
   } else {
-    await new Promise(r=>setTimeout(r,1200+Math.random()*800));
+    await new Promise(r=>setTimeout(r,1000+Math.random()*600));
     reply=getSimulatedResponse(STATE.selectedAgent,text)+
-      '\n\n---\n_Modo simulado — configure sua chave Claude para respostas reais._';
+      '\n\n---\n_Modo simulado. Configure sua chave Claude para respostas reais._';
   }
 
   document.getElementById('loading-indicator')?.remove();
-  STATE.agentMessages[STATE.selectedAgent].push({role:'assistant',text:reply,time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});
+  STATE.agentMessages[STATE.selectedAgent].push({role:'assistant',text:reply,
+    time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});
   renderAgentMessages(STATE.selectedAgent);
   document.getElementById('console-send-btn').disabled=false;
 }
@@ -2488,13 +2483,12 @@ function showNotifications(){
 }
 
 function saveApiKeyFromSettings(){
-  const raw=document.getElementById('settings-api-key').value;
-  const key=raw.replace(/[^\x20-\x7E]/g,'').trim();
+  const key=document.getElementById('settings-api-key').value.replace(/[^\x20-\x7E]/g,'').trim();
   if(key){
     STATE.apiKey=key;
     localStorage.setItem('bndu_api_key',key);
     document.getElementById('api-dot').style.background='var(--cyan)';
-    document.getElementById('api-text').innerHTML='IA <span style="color:var(--cyan)">Claude API ✅</span>';
+    document.getElementById('api-text').innerHTML='IA <span style="color:var(--cyan)">Claude API</span>';
     showToast('success','✅ Chave da API Claude salva! Agentes IA habilitados.');
   }
 }
