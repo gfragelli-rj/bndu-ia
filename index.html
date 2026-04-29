@@ -1,35 +1,4 @@
-<
-
-  // Blip Hub activity strip
-  const blipStripEl = document.getElementById('blip-dash-strip');
-  if(blipStripEl){
-    const convPreviews = [
-      {key:'reboque', icon:'🚛', name:'Reboque Rápido SP #47', preview:'📍 Chegando no endereço — 8 min', badge:'Ao vivo'},
-      {key:'analista', icon:'🧑', name:'Rafael Torres — Aprovação', preview:'Aguardando aprovação reserva leilão', badge:'Pendente'},
-      {key:'devedor',  icon:'👤', name:'Carlos E. Silva', preview:'Posso negociar a dívida?', badge:null},
-      {key:'leiloeira',icon:'🏷️', name:'Superbid — Lotes', preview:'Lote aceito para 18/05 — confirme', badge:null},
-    ];
-    blipStripEl.innerHTML = `
-      <div class="blip-hub-strip-header">
-        <div class="blip-hub-strip-title">💬 Blip Hub — Conversas Ativas</div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div class="blip-hub-strip-live">Ao Vivo · 23 chats</div>
-          <button class="blip-shortcut-btn sm" onclick="navigate('bliphub')">Ver todos →</button>
-        </div>
-      </div>
-      <div class="blip-conv-row">
-        ${convPreviews.map(c=>`
-          <div class="blip-conv-chip" onclick="openBlipTab('${c.key}')">
-            <div class="blip-conv-chip-avatar">${c.icon}</div>
-            <div style="min-width:0;flex:1">
-              <div class="blip-conv-chip-name">${c.name}</div>
-              <div class="blip-conv-chip-preview">${c.preview}</div>
-            </div>
-            ${c.badge?`<div class="blip-conv-chip-badge">${c.badge}</div>`:''}
-          </div>`).join('')}
-      </div>`;
-  }
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -246,26 +215,55 @@ function bhAssumeChat(){
 
 // ── Blip Hub shortcuts ──────────────────────────────────────
 function openBlipForCase(caseId, e){
-  if(e && e.stopPropagation){ e.stopPropagation(); }
-  const c = CASES.find(x=>x.id===caseId);
-  const chatMap = {
+  if(e && e.stopPropagation) e.stopPropagation();
+  var c = CASES.find(function(x){ return x.id===caseId; });
+  var chatMap = {
     inadimplencia:'devedor', negociacao:'devedor', execucao:'devedor',
     retomada:'reboque', vistoria:'patio',
     sanitizacao:'analista', avaliacao:'leiloeira',
     leilao:'leiloeira', baixa:'analista'
   };
-  const chatKey = c ? (chatMap[c.stage] || 'devedor') : 'devedor';
+  var chatKey = c ? (chatMap[c.stage] || 'devedor') : 'devedor';
   navigate('bliphub');
   bhCurrentChat = chatKey;
   renderBlipHub();
-  const labels = {devedor:'Devedor', reboque:'Reboque', patio:'Patio', leiloeira:'Leiloeira', analista:'Analista'};
-  showToast('info', 'Blip Hub — Conversa: ' + (labels[chatKey]||chatKey) + (c?' . '+c.id:''));
+  var labels = {devedor:'Devedor', reboque:'Reboque', patio:'Patio', leiloeira:'Leiloeira', analista:'Analista'};
+  showToast('info', '💬 Blip Hub — ' + (labels[chatKey]||chatKey) + (c?' · '+c.id:''));
 }
 
 function openBlipTab(tabKey){
   navigate('bliphub');
   bhCurrentChat = tabKey;
   renderBlipHub();
+}
+
+function renderBlipDashStrip(){
+  var el = document.getElementById('blip-dash-strip');
+  if(!el) return;
+  var chips = [
+    {key:'reboque',  ico:'🚛', name:'Reboque SP #47',        preview:'Chegando no endereco — 8 min', badge:'Ao vivo',  badgeCls:''},
+    {key:'analista', ico:'🧑', name:'Rafael — Aprovacao',    preview:'Aguardando aprovacao reserva', badge:'Pendente', badgeCls:'pending'},
+    {key:'devedor',  ico:'👤', name:'Carlos E. Silva',        preview:'Posso negociar a divida?',     badge:'',         badgeCls:''},
+    {key:'leiloeira',ico:'🏷️',name:'Superbid — Lotes',      preview:'Lote aceito para 18/05',       badge:'',         badgeCls:''},
+  ];
+  var html = '<div class="blip-dash-strip-hdr">'
+    + '<div class="blip-dash-strip-title">💬 Blip Hub — Conversas Ativas</div>'
+    + '<div style="display:flex;align-items:center;gap:10px;">'
+    + '<div class="blip-dash-strip-live">Ao Vivo · 23 chats</div>'
+    + '<button class="blip-shortcut-btn sm" onclick="navigate('bliphub')">Ver todos →</button>'
+    + '</div></div><div class="blip-conv-row">';
+  chips.forEach(function(c){
+    html += '<div class="blip-conv-chip" onclick="openBlipTab(''+c.key+'')">'
+      + '<div class="blip-conv-chip-ico">'+c.ico+'</div>'
+      + '<div style="min-width:0;flex:1">'
+      + '<div class="blip-conv-chip-name">'+c.name+'</div>'
+      + '<div class="blip-conv-chip-preview">'+c.preview+'</div>'
+      + '</div>'
+      + (c.badge ? '<div class="blip-conv-chip-badge '+c.badgeCls+'">'+c.badge+'</div>' : '')
+      + '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
 }
 
 function openCaseFromBlip(chatKey){
@@ -872,26 +870,27 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 #view-bliphub.active{display:flex!important;}
 
 
-/* ── Blip Hub shortcut styles ── */
+/* ── Blip Hub shortcuts ── */
 .blip-shortcut-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(0,196,232,.1);border:1px solid rgba(0,196,232,.3);border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;color:var(--cyan);cursor:pointer;transition:all .15s;white-space:nowrap;}
-.blip-shortcut-btn:hover{background:rgba(0,196,232,.2);border-color:rgba(0,196,232,.6);transform:translateY(-1px);}
-.blip-shortcut-btn.sm{padding:4px 8px;font-size:10.5px;border-radius:5px;}
-.blip-shortcut-btn.full{width:100%;justify-content:center;}
+.blip-shortcut-btn:hover{background:rgba(0,196,232,.2);border-color:rgba(0,196,232,.6);}
+.blip-shortcut-btn.sm{padding:4px 9px;font-size:10.5px;border-radius:5px;}
+.blip-shortcut-btn.full{width:100%;justify-content:center;margin-bottom:2px;}
 .kanban-blip-dot{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:rgba(0,196,232,.15);border:1px solid rgba(0,196,232,.35);display:flex;align-items:center;justify-content:center;font-size:9px;cursor:pointer;transition:all .15s;z-index:2;}
-.kanban-blip-dot:hover{background:rgba(0,196,232,.3);transform:scale(1.15);}
-.blip-hub-strip{background:rgba(0,196,232,.05);border:1px solid rgba(0,196,232,.15);border-radius:10px;padding:14px 18px;margin-bottom:20px;}
-.blip-hub-strip-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-.blip-hub-strip-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--cyan);}
-.blip-hub-strip-live{font-size:10px;color:var(--green);font-family:'IBM Plex Mono',monospace;display:flex;align-items:center;gap:5px;}
-.blip-hub-strip-live::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite;}
+.kanban-blip-dot:hover{background:rgba(0,196,232,.3);}
+.blip-dash-strip{background:rgba(0,196,232,.05);border:1px solid rgba(0,196,232,.15);border-radius:10px;padding:14px 18px;margin-bottom:20px;}
+.blip-dash-strip-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.blip-dash-strip-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--cyan);}
+.blip-dash-strip-live{font-size:10px;color:var(--green);font-family:'IBM Plex Mono',monospace;display:flex;align-items:center;gap:5px;}
+.blip-dash-strip-live::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite;}
 .blip-conv-row{display:flex;gap:8px;flex-wrap:wrap;}
-.blip-conv-chip{display:flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 10px;cursor:pointer;transition:all .15s;flex:1;min-width:160px;}
+.blip-conv-chip{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;cursor:pointer;transition:all .15s;flex:1;min-width:150px;}
 .blip-conv-chip:hover{border-color:var(--cyan);background:rgba(0,196,232,.07);}
-.blip-conv-chip-avatar{font-size:16px;flex-shrink:0;}
+.blip-conv-chip-ico{font-size:16px;flex-shrink:0;}
 .blip-conv-chip-name{font-size:11.5px;font-weight:600;color:var(--text);}
-.blip-conv-chip-preview{font-size:10px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;}
-.blip-conv-chip-badge{margin-left:auto;background:var(--green);color:#000;font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:3px;flex-shrink:0;}
-.auction-lot-actions{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap;}
+.blip-conv-chip-preview{font-size:10px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:130px;}
+.blip-conv-chip-badge{margin-left:auto;background:var(--green);color:#000;font-size:8px;font-weight:700;padding:2px 5px;border-radius:3px;flex-shrink:0;}
+.blip-conv-chip-badge.pending{background:var(--amber);color:#000;}
+.auction-lot-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
 
 </style>
 </head>
@@ -1030,7 +1029,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
       <!-- ── DASHBOARD VIEW ── -->
       <div class="view active" id="view-dashboard">
         <div class="kpi-grid" id="kpi-grid"></div>
-        <div class="blip-hub-strip" id="blip-dash-strip"></div>
+        <div class="blip-dash-strip" id="blip-dash-strip"></div>
         <div class="dash-grid" id="dash-grid"></div>
         <div class="dash-grid2" id="dash-grid2"></div>
       </div>
@@ -1228,7 +1227,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
     <div class="panel-tab" onclick="switchPanelTab('timeline',this)">Timeline</div>
     <div class="panel-tab" onclick="switchPanelTab('debitos',this)">Débitos</div>
     <div class="panel-tab" onclick="switchPanelTab('documentos',this)">Documentos</div>
-    <div class="panel-tab" style="color:var(--cyan);" onclick="openBlipForCase(STATE.selectedCase, event)">💬 Blip</div>
+    <div class="panel-tab" style="color:var(--cyan)" onclick="openBlipForCase(STATE.selectedCase,event)">💬 Blip</div>
   </div>
   <div class="panel-body">
     <div class="panel-tab-content active" id="tab-visao"></div>
@@ -1756,6 +1755,7 @@ function getFilteredCases(){
   if(portfolioFilterStage!=='all') cases=cases.filter(c=>c.stage===portfolioFilterStage);
   if(portfolioFilterPriority) cases=cases.filter(c=>c.prioridade==='alta');
   return cases;
+  renderBlipDashStrip();
 }
 
 function renderPortfolio(){
@@ -1772,7 +1772,7 @@ function renderKanban(){
     const cards=stageCases.map(c=>{
       const daysIn=Math.floor((new Date()-new Date(c.dStage))/86400000);
       return `<div class="kanban-card prio-${c.prioridade}" onclick="openCaseById('${c.id}')">
-        <div class="kanban-blip-dot" onclick="openBlipForCase('${c.id}',event)" title="Ver conversas no Blip Hub">💬</div>
+        <div class="kanban-blip-dot" onclick="openBlipForCase('${c.id}',event)" title="Blip Hub">💬</div>
         <div class="kanban-card-id">${c.id}</div>
         <div class="kanban-card-model">${c.veiculo.marca} ${c.veiculo.modelo}</div>
         <div class="kanban-card-plate">🚗 ${c.veiculo.placa} · ${c.veiculo.ano}</div>
@@ -1816,14 +1816,14 @@ function renderList(){
       <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--gold);font-weight:600;">${fmtCurrency(c.valorDivida)}</td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;">${daysTotal}d</td>
       <td><span class="badge badge-${c.estado==='SP'?'cyan':c.estado==='RJ'?'purple':'green'}">${c.estado}</span></td>
-      <td onclick="event.stopPropagation()"><button class="blip-shortcut-btn sm" onclick="openBlipForCase('${c.id}',event)">💬 Blip</button></td>
+      <td onclick="event.stopPropagation()"><button class="blip-shortcut-btn sm" onclick="openBlipForCase('${c.id}',event)">💬</button></td>
     </tr>`;
   }).join('');
   
   document.getElementById('portfolio-list').innerHTML=`
     <table class="case-table">
       <thead><tr>
-        <th>ID</th><th>Contrato</th><th>Veículo</th><th>Placa</th><th>Devedor</th><th>Fase</th><th>Dívida</th><th>Lead Time</th><th>UF</th><th>Blip</th>
+        <th>ID</th><th>Contrato</th><th>Veículo</th><th>Placa</th><th>Devedor</th><th>Fase</th><th>Dívida</th><th>Lead Time</th><th>UF</th><th></th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
@@ -2021,7 +2021,7 @@ function renderPanelActions(c){
   } else {
     btns+=`<button class="action-btn action-btn-primary" style="background:linear-gradient(135deg,var(--green),var(--green2));color:#000;" onclick="completeCase('${c.id}')">✅ Concluir Processo</button>`;
   }
-  btns+=`<button class="blip-shortcut-btn full" onclick="openBlipForCase('${c.id}', event)">💬 Abrir Blip Hub — Conversas deste Caso</button>`;
+  btns+=`<button class="blip-shortcut-btn full" onclick="openBlipForCase('${c.id}',event)">💬 Abrir Blip Hub — Conversas deste Caso</button>`;
   btns+=`<div class="action-btn-row">
     <button class="action-btn action-btn-secondary" onclick="askAgentAboutCase('${c.id}')">🤖 Perguntar ao Agente</button>
     <button class="action-btn action-btn-secondary" onclick="showToast('info','📋 Relatório do caso exportado')">📄 Exportar</button>
