@@ -6,7 +6,252 @@
 <title>BNDU.ia — Gestão Inteligente de Bens Não de Uso</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
+// ══════════════════════════════════════
+//  BLIP HUB
+// ══════════════════════════════════════
+const BH_CHATS = {
+  reboque:{
+    name:'Reboque Rápido SP #47', avatar:'🚛', avatarBg:'rgba(0,196,232,.15)', 
+    status:'Online · Operador Carlos', agentTag:'📍 Logistics Agent',
+    typeTag:'Reboque', typeColor:'rgba(0,196,232,.15)', typeTextColor:'var(--cyan)',
+    unread:2, preview:'📍 Chegando no endereço — 8 min', time:'14:32',
+    msgs:[
+      {type:'event', text:'Logistics Agent acionou Reboque Rápido SP #47 — BND-001 — HB20 FMC-3847'},
+      {out:true, sender:'📍 Logistics Agent via Blip', time:'14:05', text:'🚛 *Ordem de Serviço #OS-2847*
+
+Olá! Sou o assistente do Banco BV. Temos uma apreensão prioritária:', card:{title:'📋 OS-2847 — Busca e Apreensão', rows:[['Veículo','HB20 Sense 2021 — Cinza'],['Placa','FMC-3847'],['Endereço','Rua das Flores, 142 — Guarulhos'],['Prazo','Hoje até 17h'],['Prioridade','🔴 Alta']]}, actions:['✅ Confirmar OS','❌ Recusar']},
+      {in:true, time:'14:07', text:'✅ OS confirmada. Saindo agora. ETA 25 minutos.'},
+      {out:true, sender:'📍 Logistics Agent via Blip', time:'14:07', text:'Ótimo! Por favor envie sua localização quando chegar ao endereço. 📍'},
+      {in:true, time:'14:19', text:'📍 Localização enviada — estou a 2 quarteirões'},
+      {in:true, time:'14:32', text:'📍 Chegando no endereço — 8 minutos
+
+*Situação:* Veículo visível na garagem ✅'},
+      {type:'typing'}
+    ]
+  },
+  analista:{
+    name:'Rafael Torres — Analista', avatar:'🧑‍💼', avatarBg:'rgba(139,92,246,.15)',
+    status:'Online · aguardando aprovação', agentTag:'🧠 Supervisor Agent',
+    typeTag:'Human Loop', typeColor:'rgba(240,160,48,.12)', typeTextColor:'var(--amber)',
+    unread:1, preview:'Aprovação necessária — reserva leilão', time:'14:28',
+    msgs:[
+      {type:'event', text:'Supervisor Agent escalou BND-007 para aprovação humana — preço de reserva 18% abaixo do limite'},
+      {out:true, sender:'🧠 Supervisor Agent via Blip', time:'14:25', text:'⚠️ *Aprovação Necessária — Preço de Reserva*
+
+Rafael, o Auction Agent calculou preço de reserva abaixo do limite mínimo configurado. Preciso de sua aprovação:', card:{title:'🔨 Lote BND-007 — Onix 2020', rows:[['Veículo','Chevrolet Onix LT 2020'],['FIPE atual','R$ 48.200'],['Reserva calculada','R$ 39.500 (82% FIPE)'],['Débitos saneados','R$ 3.100'],['Resultado líq. proj.','R$ 36.400'],['Leiloeira','Superbid — 18/05']]}, actions:['✅ Aprovar reserva','🔄 Recalcular','❌ Aguardar']},
+      {type:'typing'}
+    ]
+  },
+  devedor:{
+    name:'Carlos E. Silva', avatar:'👤', avatarBg:'rgba(6,214,160,.1)',
+    status:'Online · identificado por CPF', agentTag:'🤖 BNDU Bot · Blip NLU',
+    typeTag:'Devedor', typeColor:'rgba(6,214,160,.1)', typeTextColor:'var(--green)',
+    unread:0, preview:'Posso negociar a dívida?', time:'14:21',
+    msgs:[
+      {type:'event', text:'Legal Agent notificou Carlos E. Silva — BND-001 — liminar de busca e apreensão deferida'},
+      {out:true, sender:'🤖 BNDU Bot via Blip', time:'13:55', text:'📋 *Banco BV — Notificação Importante*
+
+Olá, Carlos! Identificamos um contrato de financiamento com débito em aberto (BND-001). Uma liminar de busca e apreensão foi deferida. Como podemos ajudá-lo?'},
+      {in:true, time:'14:20', text:'Posso negociar a dívida? Quanto preciso pagar?'},
+      {out:true, sender:'🤖 BNDU Bot via Blip', time:'14:20', text:'✅ Sim! Você pode regularizar sua situação.
+
+Seu saldo devedor: *R$ 45.800*.
+
+Opções disponíveis:', card:{title:'💰 Opções de Regularização', rows:[['À vista','R$ 40.304 (12% desc.)'],['3x cartão','R$ 45.800 sem juros'],['Negociação direta','Falar com consultor']]}, actions:['💳 Pagar à vista','📞 Falar com consultor','📋 Ver detalhes']}
+    ]
+  },
+  patio:{
+    name:'Pátio Central Guarulhos', avatar:'🏭', avatarBg:'rgba(245,166,35,.1)',
+    status:'Online · Recepção', agentTag:'📍 Logistics Agent',
+    typeTag:'Pátio', typeColor:'rgba(245,166,35,.12)', typeTextColor:'var(--amber)',
+    unread:0, preview:'✅ Check-in confirmado — HB20 FMC-3847', time:'14:09',
+    msgs:[
+      {out:true, sender:'📍 Logistics Agent via Blip', time:'13:50', text:'🏭 *Aviso de Chegada — Banco BV*
+
+Um veículo será entregue em ~30 minutos. Por favor, prepare a vaga e o checklist de entrada:', card:{title:'🚗 Veículo em Trânsito', rows:[['Placa','FMC-3847'],['Veículo','HB20 Cinza 2021'],['Reboque','Rápido SP #47'],['ETA','~25 min'],['Contrato','BND-001']]}},
+      {in:true, time:'13:52', text:'✅ Recebido. Vaga 47-B reservada. Câmera ativada.'},
+      {out:true, sender:'📍 Logistics Agent via Blip', time:'13:52', text:'Perfeito! Quando o veículo chegar, envie:
+
+1️⃣ Foto da frente com placa visível
+2️⃣ Foto lateral direita e esquerda
+3️⃣ Odômetro
+4️⃣ Estado geral (1-5)'},
+      {in:true, time:'14:09', text:'✅ Check-in confirmado — HB20 placa FMC-3847
+
+📸 4 fotos enviadas
+📏 Odômetro: 48.320 km
+⭐ Estado: 3/5 (amassado no para-choque)
+📍 Vaga: 47-B'},
+      {out:true, sender:'📍 Logistics Agent via Blip', time:'14:09', text:'✅ Check-in registrado! Asset Profile atualizado automaticamente. Compliance Agent notificado para iniciar vistoria. Obrigado! 🙏'}
+    ]
+  },
+  leiloeira:{
+    name:'Superbid — Leilões', avatar:'🏷️', avatarBg:'rgba(240,160,48,.1)',
+    status:'Online · Cadastro de Lotes', agentTag:'🔨 Auction Agent',
+    typeTag:'Leiloeira', typeColor:'rgba(245,166,35,.12)', typeTextColor:'var(--amber)',
+    unread:0, preview:'Lote aceito para 18/05 — confirme', time:'13:55',
+    msgs:[
+      {type:'event', text:'Auction Agent acionou 3 leiloeiras simultâneas — lote BND-007'},
+      {out:true, sender:'🔨 Auction Agent via Blip', time:'13:48', text:'🔨 *Banco BV — Lote Disponível*
+
+Olá, Superbid! Temos um lote disponível para o seu próximo evento:', card:{title:'🚗 Lote BND-L-0847', rows:[['Veículo','Chevrolet Onix LT 2020'],['Placa','RST-9921'],['Km','52.400'],['Estado geral','4/5'],['Reserva mín.','R$ 39.500'],['Documentação','✅ Regularizada']]}, actions:['✅ Aceitar lote','❌ Sem disponibilidade','📅 Outra data']},
+      {in:true, time:'13:55', text:'Lote aceito para 18/05 — confirme'},
+      {out:true, sender:'🔨 Auction Agent via Blip', time:'13:55', text:'✅ Confirmado!
+
+*Lote BND-L-0847* reservado para *18/05* às 10h.
+
+Você receberá laudo completo e fotos em até 2h. 👍'}
+    ]
+  }
+};
+
+let bhCurrentChat = 'reboque';
+
+function renderBlipHub(){
+  renderBhList();
+  renderBhChat(bhCurrentChat);
+}
+
+function renderBhList(){
+  const listEl = document.getElementById('bh-list-body');
+  if(!listEl) return;
+  const order = ['reboque','analista','devedor','patio','leiloeira'];
+  listEl.innerHTML = order.map(key => {
+    const c = BH_CHATS[key];
+    return `<div class="bh-chat-item${key===bhCurrentChat?' active':''}" onclick="bhOpenChat('${key}')">
+      <div class="bh-avatar" style="background:${c.avatarBg}">${c.avatar}</div>
+      <div style="flex:1;min-width:0">
+        <div class="bh-chat-name">${c.name}</div>
+        <div class="bh-chat-preview">${c.preview}</div>
+        <span class="bh-type-tag" style="background:${c.typeColor};color:${c.typeTextColor}">${c.typeTag}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <div class="bh-chat-time">${c.time}</div>
+        ${c.unread>0?`<div class="bh-chat-badge">${c.unread}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function bhOpenChat(key){
+  bhCurrentChat = key;
+  BH_CHATS[key].unread = 0;
+  renderBhList();
+  renderBhChat(key);
+}
+
+function bhSetTab(el, tab){
+  document.querySelectorAll('.blip-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function renderBhChat(key){
+  const win = document.getElementById('bh-window');
+  if(!win) return;
+  const c = BH_CHATS[key];
+  
+  let msgsHtml = c.msgs.map(m => {
+    if(m.type==='event') return `<div class="bh-agent-event">🤖 ${m.text}</div>`;
+    if(m.type==='typing') return `<div class="bh-msg in"><div class="bh-typing"><div class="bh-typing-dot"></div><div class="bh-typing-dot"></div><div class="bh-typing-dot"></div></div><div class="bh-msg-meta">digitando...</div></div>`;
+    const textHtml = m.text.replace(/\*(.*?)\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+    let cardHtml = '';
+    if(m.card){
+      const rows = m.card.rows.map(r=>`<div class="bh-card-row"><span>${r[0]}</span><span>${r[1]}</span></div>`).join('');
+      cardHtml = `<div class="bh-card"><div class="bh-card-title">${m.card.title}</div>${rows}</div>`;
+    }
+    let actionsHtml = '';
+    if(m.actions){
+      const btns = m.actions.map((a,i)=>{
+        const cls = i===0?'bh-action-confirm':i===1?'bh-action-reject':'bh-action-info';
+        return `<button class="bh-action-btn ${cls}" onclick="bhHandleAction('${a}')">${a}</button>`;
+      }).join('');
+      actionsHtml = `<div class="bh-actions">${btns}</div>`;
+    }
+    if(m.out){
+      return `<div class="bh-msg out">
+        <div class="bh-agent-tag">${m.sender}</div>
+        <div class="bh-bubble">${textHtml}${cardHtml}${actionsHtml}</div>
+        <div class="bh-msg-meta">${m.time} <span class="bh-check">✓✓</span></div>
+      </div>`;
+    } else {
+      return `<div class="bh-msg in">
+        <div class="bh-bubble">${textHtml}</div>
+        <div class="bh-msg-meta">${m.time}</div>
+      </div>`;
+    }
+  }).join('');
+
+  win.innerHTML = `
+    <div class="bh-win-header">
+      <div class="bh-win-avatar" style="background:${c.avatarBg}">${c.avatar}</div>
+      <div>
+        <div class="bh-win-name">${c.name}</div>
+        <div class="bh-win-status">${c.status}</div>
+      </div>
+      <div class="bh-win-actions">
+        <button class="bh-win-btn" onclick="openCaseFromBlip('${key}')">📋 Ver caso</button>
+        <button class="bh-win-btn">📊 Histórico</button>
+        <button class="bh-win-btn" onclick="bhAssumeChat()">🧑 Assumir</button>
+      </div>
+    </div>
+    <div class="bh-messages" id="bh-msgs">${msgsHtml}</div>
+    <div class="bh-input-area">
+      <input class="bh-input" id="bh-input-field" placeholder="Responder como analista..." onkeydown="if(event.key==='Enter')bhSendMsg()">
+      <button class="bh-send-btn" onclick="bhSendMsg()">➤</button>
+    </div>
+  `;
+  const msgs = document.getElementById('bh-msgs');
+  if(msgs) msgs.scrollTop = msgs.scrollHeight;
+}
+
+function bhHandleAction(action){
+  const input = document.getElementById('bh-input-field');
+  if(input){ input.value = action; bhSendMsg(); }
+}
+
+function bhSendMsg(){
+  const input = document.getElementById('bh-input-field');
+  if(!input || !input.value.trim()) return;
+  const text = input.value.trim(); input.value='';
+  const msgs = document.getElementById('bh-msgs');
+  if(!msgs) return;
+  // remove typing indicator if present
+  const lastIn = msgs.querySelector('.bh-msg.in:last-child .bh-typing');
+  if(lastIn) msgs.querySelector('.bh-msg.in:last-child').remove();
+  const div = document.createElement('div');
+  div.className = 'bh-msg out';
+  div.innerHTML = `<div class="bh-agent-tag">🧑 Analista</div><div class="bh-bubble">${text}</div><div class="bh-msg-meta">agora <span class="bh-check">✓✓</span></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  setTimeout(()=>{
+    const r = document.createElement('div');
+    r.className = 'bh-msg in';
+    r.innerHTML = '<div class="bh-typing"><div class="bh-typing-dot"></div><div class="bh-typing-dot"></div><div class="bh-typing-dot"></div></div>';
+    msgs.appendChild(r); msgs.scrollTop = msgs.scrollHeight;
+    setTimeout(()=>{ r.innerHTML = '<div class="bh-bubble">✅ Entendido! Processando sua solicitação...</div><div class="bh-msg-meta">agora</div>'; msgs.scrollTop = msgs.scrollHeight; },1800);
+  },1000);
+}
+
+function bhAssumeChat(){
+  const msgs = document.getElementById('bh-msgs');
+  if(!msgs) return;
+  const div = document.createElement('div');
+  div.className = 'bh-divider';
+  div.textContent = 'Atendimento assumido por analista humano';
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+}
+
+function openCaseFromBlip(chatKey){
+  const caseMap = {reboque:'BND-001',devedor:'BND-001',patio:'BND-001',analista:'BND-007',leiloeira:'BND-007'};
+  const caseId = caseMap[chatKey];
+  if(caseId){
+    const c = CASES.find(x=>x.id===caseId);
+    if(c){ navigate('portfolio'); setTimeout(()=>openCasePanel(c),300); }
+  }
+}
+
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
@@ -500,6 +745,106 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 /* Responsive */
 @media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,1fr);}.dash-grid{grid-template-columns:1fr 1fr;}}
 @media(max-width:900px){.sidebar{display:none;}.agents-layout{grid-template-columns:1fr;}.auction-layout{grid-template-columns:1fr;}}
+
+/* ══════════════════════════════════════
+   BLIP HUB VIEW
+══════════════════════════════════════ */
+.nav-item.blip-nav{background:rgba(0,196,232,.06);border:1px solid rgba(0,196,232,.15);margin-bottom:4px;}
+.nav-item.blip-nav.active{background:rgba(0,196,232,.15);border-color:rgba(0,196,232,.4);}
+.nav-badge-live{background:var(--green);animation:pulse 1.5s infinite;font-size:9px;padding:2px 5px;}
+
+.blip-hub-layout{display:grid;grid-template-columns:1fr;gap:0;height:calc(100vh - var(--header-h) - 48px);}
+.blip-hub-header{background:linear-gradient(135deg,rgba(0,196,232,.06) 0%,transparent 60%);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:16px;}
+.blip-hub-top{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+.blip-logo-box{width:40px;height:40px;background:linear-gradient(135deg,var(--cyan),var(--cyan2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.blip-hub-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;}
+.blip-hub-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.blip-live-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(6,214,160,.1);border:1px solid rgba(6,214,160,.3);border-radius:20px;padding:4px 12px;font-size:10.5px;font-weight:700;color:var(--green);margin-left:auto;}
+.blip-live-pill::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite;}
+
+.blip-stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;}
+.blip-stat-box{background:var(--bg3);border-radius:8px;padding:10px 12px;}
+.blip-stat-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.02em;}
+.blip-stat-lbl{font-size:9.5px;color:var(--text3);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.08em;margin-top:2px;}
+
+.blip-tabs-row{display:flex;gap:4px;}
+.blip-tab{padding:7px 14px;border-radius:8px 8px 0 0;font-size:11.5px;font-weight:500;cursor:pointer;color:var(--text3);border:1px solid transparent;border-bottom:none;transition:all .15s;}
+.blip-tab.active{background:var(--bg2);color:var(--text);border-color:var(--border);}
+.blip-tab:hover:not(.active){color:var(--text2);}
+
+.blip-chat-wrap{display:flex;flex:1;border:1px solid var(--border);border-radius:0 10px 10px 10px;overflow:hidden;background:var(--bg2);height:calc(100vh - var(--header-h) - 48px - 220px);}
+
+.bh-list{width:270px;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
+.bh-list-search{padding:12px;border-bottom:1px solid var(--border);}
+.bh-search-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-size:12.5px;color:var(--text);outline:none;font-family:'IBM Plex Sans',sans-serif;}
+.bh-search-input:focus{border-color:var(--cyan);}
+.bh-search-input::placeholder{color:var(--text3);}
+.bh-list-body{flex:1;overflow-y:auto;}
+.bh-chat-item{display:flex;align-items:flex-start;gap:10px;padding:12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;position:relative;}
+.bh-chat-item:hover{background:var(--surface);}
+.bh-chat-item.active{background:rgba(0,196,232,.08);border-left:2px solid var(--cyan);}
+.bh-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;font-weight:700;}
+.bh-chat-name{font-size:12.5px;font-weight:600;margin-bottom:1px;}
+.bh-chat-preview{font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;}
+.bh-chat-time{font-size:9.5px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-left:auto;flex-shrink:0;}
+.bh-chat-badge{position:absolute;top:10px;right:10px;width:17px;height:17px;background:var(--red);border-radius:50%;font-size:9px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;}
+.bh-type-tag{font-size:9px;padding:1px 6px;border-radius:3px;margin-top:3px;display:inline-block;font-weight:600;font-family:'IBM Plex Mono',monospace;}
+
+.bh-window{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.bh-win-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;background:var(--surface);}
+.bh-win-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;}
+.bh-win-name{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:700;}
+.bh-win-status{font-size:10.5px;color:var(--green);font-family:'IBM Plex Mono',monospace;}
+.bh-win-actions{margin-left:auto;display:flex;gap:6px;}
+.bh-win-btn{padding:5px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;color:var(--text2);transition:all .15s;}
+.bh-win-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+
+.bh-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;}
+.bh-msg{display:flex;flex-direction:column;max-width:78%;}
+.bh-msg.out{align-self:flex-end;align-items:flex-end;}
+.bh-msg.in{align-self:flex-start;align-items:flex-start;}
+.bh-bubble{padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.55;}
+.bh-msg.out .bh-bubble{background:rgba(0,196,232,.15);color:var(--text);border:1px solid rgba(0,196,232,.2);border-bottom-right-radius:3px;}
+.bh-msg.in .bh-bubble{background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-bottom-left-radius:3px;}
+.bh-msg-meta{font-size:9.5px;color:var(--text3);margin-top:3px;display:flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace;}
+.bh-check{color:var(--cyan);}
+.bh-agent-tag{font-size:10px;font-weight:600;color:var(--cyan);margin-bottom:3px;font-family:'IBM Plex Mono',monospace;}
+.bh-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-top:8px;}
+.bh-card-title{font-size:11px;font-weight:700;font-family:'Syne',sans-serif;margin-bottom:6px;color:var(--cyan);}
+.bh-card-row{display:flex;justify-content:space-between;font-size:11.5px;padding:3px 0;border-bottom:1px solid var(--border);}
+.bh-card-row:last-child{border-bottom:none;}
+.bh-card-row span:first-child{color:var(--text3);}
+.bh-card-row span:last-child{font-family:'IBM Plex Mono',monospace;font-weight:500;}
+.bh-actions{display:flex;gap:6px;margin-top:8px;}
+.bh-action-btn{flex:1;padding:7px;border-radius:7px;font-size:11.5px;font-weight:600;border:none;cursor:pointer;text-align:center;transition:all .15s;}
+.bh-action-confirm{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;}
+.bh-action-reject{background:rgba(240,90,79,.12);color:var(--red);border:1px solid rgba(240,90,79,.3);}
+.bh-action-info{background:var(--bg3);color:var(--text2);border:1px solid var(--border);}
+.bh-typing{display:flex;gap:4px;padding:10px 14px;background:var(--surface2);border-radius:12px;border-bottom-left-radius:3px;width:fit-content;border:1px solid var(--border2);}
+.bh-typing-dot{width:6px;height:6px;background:var(--text3);border-radius:50%;animation:loading-bounce .8s ease infinite;}
+.bh-typing-dot:nth-child(2){animation-delay:.15s;}
+.bh-typing-dot:nth-child(3){animation-delay:.3s;}
+.bh-agent-event{background:rgba(0,196,232,.05);border:1px solid rgba(0,196,232,.15);border-radius:7px;padding:7px 12px;font-size:11px;text-align:center;color:var(--cyan);font-family:'IBM Plex Mono',monospace;}
+.bh-divider{text-align:center;font-size:10.5px;color:var(--text3);display:flex;align-items:center;gap:8px;}
+.bh-divider::before,.bh-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.bh-input-area{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;background:var(--surface);}
+.bh-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:9px 16px;font-size:13px;color:var(--text);outline:none;font-family:'IBM Plex Sans',sans-serif;}
+.bh-input:focus{border-color:var(--cyan);}
+.bh-input::placeholder{color:var(--text3);}
+.bh-send-btn{background:linear-gradient(135deg,var(--cyan),var(--cyan2));border:none;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:16px;}
+.bh-send-btn:hover{box-shadow:0 4px 16px rgba(0,196,232,.3);}
+
+/* Blip card in integrations */
+.integration-card.blip-featured{border-color:rgba(0,196,232,.4);background:rgba(0,196,232,.04);grid-column:1/-1;}
+.integration-card.blip-featured .int-name{color:var(--cyan);}
+.blip-int-channels{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.blip-int-channel{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:10.5px;color:var(--text3);font-family:'IBM Plex Mono',monospace;}
+.blip-int-metrics-full{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:10px;}
+
+
+#view-bliphub.active{display:flex!important;}
+
 </style>
 </head>
 <body>
@@ -585,6 +930,10 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
         <div class="nav-item" onclick="navigate('agents')" id="nav-agents">
           <span class="nav-icon">🤖</span><span class="nav-label">Agentes de IA</span>
           <span class="nav-badge nav-badge-cyan" id="agents-badge">8</span>
+        </div>
+        <div class="nav-item blip-nav" onclick="navigate('bliphub')" id="nav-bliphub">
+          <span class="nav-icon">💬</span><span class="nav-label">Blip Hub</span>
+          <span class="nav-badge nav-badge-live">ao vivo</span>
         </div>
         <div class="nav-item" onclick="navigate('relatorios')" id="nav-relatorios">
           <span class="nav-icon">📈</span><span class="nav-label">Relatórios</span>
@@ -684,6 +1033,46 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+
+      <!-- ── BLIP HUB VIEW ── -->
+      <div class="view" id="view-bliphub" style="padding:20px;height:100%;display:none;flex-direction:column;">
+        <!-- Header stats -->
+        <div class="blip-hub-header">
+          <div class="blip-hub-top">
+            <div class="blip-logo-box">💬</div>
+            <div>
+              <div class="blip-hub-title">Blip Hub — Central de Conversas BNDU</div>
+              <div class="blip-hub-sub">WhatsApp Business API · Meta BSP Oficial · NLU + IA Generativa · 25B+ msgs · 150M+ usuários</div>
+            </div>
+            <div class="blip-live-pill">Ao Vivo</div>
+          </div>
+          <div class="blip-stats-row">
+            <div class="blip-stat-box"><div class="blip-stat-val kpi-cyan" id="bh-stat-msgs">847</div><div class="blip-stat-lbl">Mensagens Hoje</div></div>
+            <div class="blip-stat-box"><div class="blip-stat-val kpi-green" id="bh-stat-resp">94%</div><div class="blip-stat-lbl">Taxa Resposta</div></div>
+            <div class="blip-stat-box"><div class="blip-stat-val" id="bh-stat-active">23</div><div class="blip-stat-lbl">Chats Ativos</div></div>
+            <div class="blip-stat-box"><div class="blip-stat-val kpi-green" id="bh-stat-time">2m14s</div><div class="blip-stat-lbl">Tempo Médio</div></div>
+            <div class="blip-stat-box"><div class="blip-stat-val kpi-amber" id="bh-stat-human">3</div><div class="blip-stat-lbl">Aguard. Humano</div></div>
+          </div>
+          <div class="blip-tabs-row">
+            <div class="blip-tab active" onclick="bhSetTab(this,'todos')">Todos (23)</div>
+            <div class="blip-tab" onclick="bhSetTab(this,'devedor')">👤 Devedor (8)</div>
+            <div class="blip-tab" onclick="bhSetTab(this,'reboque')">🚛 Reboque/Pátio (7)</div>
+            <div class="blip-tab" onclick="bhSetTab(this,'analista')">🧑 Analista (5)</div>
+            <div class="blip-tab" onclick="bhSetTab(this,'leiloeira')">🏷️ Leiloeira (3)</div>
+          </div>
+        </div>
+        <!-- Chat area -->
+        <div class="blip-chat-wrap">
+          <div class="bh-list">
+            <div class="bh-list-search">
+              <input class="bh-search-input" placeholder="🔍  Buscar conversa..." />
+            </div>
+            <div class="bh-list-body" id="bh-list-body"></div>
+          </div>
+          <div class="bh-window" id="bh-window"></div>
         </div>
       </div>
 
@@ -1072,32 +1461,31 @@ function doLogin(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').classList.add('visible');
 
-  // Set user info
   const name=ROLE_NAMES[STATE.role];
   document.getElementById('sidebar-name').textContent=name;
   document.getElementById('sidebar-role').textContent=ROLE_LABELS[STATE.role];
   document.getElementById('sidebar-avatar').textContent=name.charAt(0);
 
-  // ── Auto-prompt for API key if not configured ──
-  const keyInvalid = !STATE.apiKey
-    || STATE.apiKey==='YOUR_NEW_KEY_HERE'
-    || STATE.apiKey.trim()==='';
-
+  // Auto-prompt for API key if not configured
+  const keyInvalid = !STATE.apiKey || STATE.apiKey.trim()==='';
   if(keyInvalid){
     setTimeout(()=>{
       const k = window.prompt(
-        '🔑 Cole aqui sua chave da API Claude (começa com sk-ant-api03-...)\n\n'+
+        '🔑 Cole aqui sua chave da API Claude (começa com sk-ant-api03-)\n\n'+
         'Você encontra em: console.anthropic.com → Settings → API Keys\n\n'+
-        'A chave será salva no seu navegador e não precisará inserir novamente.'
+        'A chave será salva no seu navegador automaticamente.'
       );
-      if(k && k.replace(/[^\x20-\x7E]/g,'').trim().startsWith('sk-')){
-        STATE.apiKey=k.replace(/[^\x20-\x7E]/g,'').trim();
-        localStorage.setItem('bndu_api_key',STATE.apiKey);
-        document.getElementById('api-dot').style.background='var(--cyan)';
-        document.getElementById('api-text').innerHTML='IA <span style="color:var(--cyan)">Claude API ✅</span>';
-        showToast('success','✅ Chave configurada! Os agentes agora respondem com Claude.');
-      } else if(k !== null){
-        showToast('error','⚠️ Chave inválida. Vá em Configurações para tentar novamente.');
+      if(k){
+        const clean = k.replace(/[^\x20-\x7E]/g,'').trim();
+        if(clean.startsWith('sk-')){
+          STATE.apiKey=clean;
+          localStorage.setItem('bndu_api_key',clean);
+          document.getElementById('api-dot').style.background='var(--cyan)';
+          document.getElementById('api-text').innerHTML='IA <span style="color:var(--cyan)">Claude API ✅</span>';
+          showToast('success','✅ Chave configurada! Agentes respondem com Claude.');
+        } else {
+          showToast('error','⚠️ Chave inválida. Configure em Configurações.');
+        }
       }
     }, 800);
   } else {
@@ -1105,7 +1493,6 @@ function doLogin(){
     document.getElementById('api-text').innerHTML='IA <span style="color:var(--cyan)">Claude API ✅</span>';
   }
 
-  // Init views
   document.getElementById('portfolio-badge').textContent=CASES.length;
   renderDashboard();
   renderPortfolio();
@@ -1113,16 +1500,17 @@ function doLogin(){
   renderLeilao();
   renderRelatorios();
   renderIntegracoes();
+  renderBlipHub();
 
   showToast('info',`👋 Bem-vindo(a), ${name.split(' ')[0]}! Conectando ao Supabase...`);
-
   loadFromSupabase().then(()=>{
     document.getElementById('portfolio-badge').textContent=CASES.length;
     renderDashboard();
     renderPortfolio();
   });
-
   setTimeout(()=>showToast('info','🤖 Supervisor Agent: 3 casos precisam de atenção hoje'),3500);
+  setTimeout(()=>showToast('success','💬 Blip Hub: Reboque SP #47 confirmou OS — ETA 25min'),6000);
+  setTimeout(()=>showToast('info','💬 Blip Hub: Analista, aprovação necessária — reserva leilão BND-007'),10000);
 }
 
 // ══════════════════════════════════════
@@ -1145,7 +1533,8 @@ function navigate(view){
     leilao:['Leilão & Pricing','Gestão de lotes e precificação dinâmica'],
     relatorios:['Relatórios','Analytics e KPIs avançados'],
     integracoes:['Integrações','Status das conexões com sistemas externos'],
-    configuracoes:['Configurações','Preferências e configurações da plataforma']
+    configuracoes:['Configurações','Preferências e configurações da plataforma'],
+    bliphub:['💬 Blip Hub','Central de conversas — WhatsApp Business API · NLU · IA Generativa']
   };
   const t=titles[view]||['BNDU.ia',''];
   document.getElementById('header-title').innerHTML=t[0]+` <span>${t[1]}</span>`;
@@ -1718,7 +2107,6 @@ async function sendToAgent(){
   input.value='';
   renderAgentMessages(STATE.selectedAgent);
 
-  // Show loading indicator
   const msgsEl=document.getElementById('console-msgs');
   const loader=document.createElement('div');
   loader.className='console-loading';
@@ -1726,14 +2114,13 @@ async function sendToAgent(){
   loader.id='loading-indicator';
   msgsEl.appendChild(loader);
   msgsEl.scrollTop=msgsEl.scrollHeight;
-
   document.getElementById('console-send-btn').disabled=true;
 
   let reply='';
 
   if(STATE.apiKey){
     try{
-      // ── 1. Build rich portfolio context ──
+      // Build rich portfolio context with all case data
       const caseLines=CASES.map(c=>
         `[${c.id}] ${c.veiculo.marca} ${c.veiculo.modelo} ${c.veiculo.ano}`+
         ` | Devedor: ${c.devedor.nome}`+
@@ -1741,8 +2128,7 @@ async function sendToAgent(){
         ` | FIPE: ${fmtCurrency(c.fipe)}`+
         ` | Fase: ${c.stage}`+
         ` | Estado: ${c.estado}`+
-        ` | Prioridade: ${c.prioridade}`+
-        ` | Início: ${c.dInicio}`
+        ` | Prioridade: ${c.prioridade}`
       ).join('\n');
 
       const portfolioContext=
@@ -1753,26 +2139,22 @@ async function sendToAgent(){
         `Por fase: ${STAGES.map(s=>`${s.label}=${CASES.filter(c=>c.stage===s.id).length}`).join(' | ')}\n\n`+
         `=== CASOS DETALHADOS ===\n${caseLines}`;
 
-      // ── 2. Build conversation history for multi-turn memory ──
-      // STATE.agentMessages already has the current user msg appended above,
-      // so we use all of it — mapping to Anthropic's {role, content} format.
+      // Full conversation history for multi-turn memory
       const history=STATE.agentMessages[STATE.selectedAgent];
-      const messages=history.map((m,i)=>{
-        let content=m.text;
-        // Inject portfolio context into every user turn so the model always
-        // has fresh data, regardless of where in the conversation we are.
-        if(m.role==='user'){
-          content=`${portfolioContext}\n\n=== PERGUNTA ===\n${m.text}`;
-        }
-        return {role:m.role==='user'?'user':'assistant', content};
-      });
+      const messages=history.map(m=>({
+        role: m.role==='user'?'user':'assistant',
+        content: m.role==='user'
+          ? `${portfolioContext}\n\n=== PERGUNTA ===\n${m.text}`
+          : m.text
+      }));
 
-      // ── 3. Call Claude API ──
+      const cleanKey=STATE.apiKey.replace(/[^\x20-\x7E]/g,'').trim();
+
       const resp=await fetch('https://api.anthropic.com/v1/messages',{
         method:'POST',
         headers:{
           'Content-Type':'application/json',
-          'x-api-key':STATE.apiKey.replace(/[^\x20-\x7E]/g,'').trim(),
+          'x-api-key':cleanKey,
           'anthropic-version':'2023-06-01',
           'anthropic-dangerous-direct-browser-access':'true'
         },
@@ -1785,22 +2167,19 @@ async function sendToAgent(){
       });
 
       const data=await resp.json();
-
       if(data.error){
-        // Show the real API error so it's easy to diagnose
-        reply=`⚠️ Erro da API Claude (${data.error.type}): ${data.error.message}`;
+        reply=`⚠️ Erro Claude (${data.error.type}): ${data.error.message}`;
       } else {
         reply=data.content?.[0]?.text||'Resposta vazia da API.';
       }
 
     } catch(e){
-      reply=`⚠️ Erro de conexão com a API: ${e.message}`;
+      reply=`⚠️ Erro de conexão: ${e.message}`;
     }
   } else {
-    // No key — fall back to simulation and nudge the user
     await new Promise(r=>setTimeout(r,1200+Math.random()*800));
     reply=getSimulatedResponse(STATE.selectedAgent,text)+
-      '\n\n---\n_Modo simulado — configure sua chave Claude em Configurações para respostas reais._';
+      '\n\n---\n_Modo simulado — configure sua chave Claude para respostas reais._';
   }
 
   document.getElementById('loading-indicator')?.remove();
@@ -1808,6 +2187,7 @@ async function sendToAgent(){
   renderAgentMessages(STATE.selectedAgent);
   document.getElementById('console-send-btn').disabled=false;
 }
+
 
 function getSimulatedResponse(agentId,query){
   const q=query.toLowerCase();
@@ -1974,7 +2354,36 @@ function renderIntegracoes(){
     {icon:'📊',name:'FIPE / Mercado',type:'API REST',status:'online',metrics:[{l:'Consultas hoje',v:'23'},{l:'Última atualização',v:'30min atrás'},{l:'Modelos indexados',v:CASES.length},{l:'Variação média',v:'-2.1%'}]}
   ];
   
-  document.getElementById('integrations-grid').innerHTML=integrations.map(i=>`
+  const blipCard=`
+    <div class="integration-card blip-featured">
+      <div class="int-header">
+        <span class="int-icon" style="font-size:28px">💬</span>
+        <div>
+          <div class="int-name">Blip — Plataforma Conversacional <span class="badge badge-cyan" style="font-size:10px;margin-left:8px">Hub Central</span></div>
+          <div class="int-type">WhatsApp Business API · NLU · IA Generativa · Meta BSP Oficial · 25B+ mensagens · 150M+ usuários</div>
+        </div>
+        <div class="int-status online" style="font-size:12px">● Conectado · Ao Vivo</div>
+      </div>
+      <div class="blip-int-metrics-full">
+        <div class="int-metric"><div class="int-metric-label">Msgs Hoje</div><div class="int-metric-val" style="color:var(--cyan)">847</div></div>
+        <div class="int-metric"><div class="int-metric-label">Taxa Resposta</div><div class="int-metric-val" style="color:var(--green)">94%</div></div>
+        <div class="int-metric"><div class="int-metric-label">Chats Ativos</div><div class="int-metric-val">23</div></div>
+        <div class="int-metric"><div class="int-metric-label">Tempo Médio</div><div class="int-metric-val">2m 14s</div></div>
+        <div class="int-metric"><div class="int-metric-label">SLA Uptime</div><div class="int-metric-val" style="color:var(--green)">99.9%</div></div>
+      </div>
+      <div class="blip-int-channels">
+        <span class="blip-int-channel" style="background:rgba(0,196,232,.1);border-color:rgba(0,196,232,.3);color:var(--cyan)">✅ WhatsApp Business</span>
+        <span class="blip-int-channel">📱 SMS fallback</span>
+        <span class="blip-int-channel">💬 Messenger</span>
+        <span class="blip-int-channel">🧠 NLU nativo</span>
+        <span class="blip-int-channel">🤖 IA Generativa</span>
+        <span class="blip-int-channel">🔀 Roteamento humano</span>
+        <span class="blip-int-channel">📊 Analytics real-time</span>
+        <span class="blip-int-channel">🔒 LGPD compliant</span>
+      </div>
+      <button class="int-btn" style="margin-top:10px;border-color:rgba(0,196,232,.3);color:var(--cyan)" onclick="navigate('bliphub')">💬 Abrir Blip Hub</button>
+    </div>`;
+  document.getElementById('integrations-grid').innerHTML=blipCard+integrations.map(i=>`
     <div class="integration-card">
       <div class="int-header">
         <span class="int-icon">${i.icon}</span>
