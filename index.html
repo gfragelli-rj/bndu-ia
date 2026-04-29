@@ -1041,7 +1041,7 @@ let STATE = {
   portfolioView: 'kanban',
   filterStage: 'all',
   filterPriority: false,
-  apiKey: localStorage.getItem('bndu_api_key') || '',
+  apiKey: localStorage.getItem('bndu_api_key') || 'YOUR_NEW_KEY_HERE',
   agentMessages: {},
   searchQuery: ''
 };
@@ -1690,15 +1690,15 @@ async function sendToAgent(){
   const input=document.getElementById('console-input');
   const text=input.value.trim();
   if(!text) return;
-  
+
   const agent=AGENTS_DEF.find(a=>a.id===STATE.selectedAgent);
   const time=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  
+
   STATE.agentMessages[STATE.selectedAgent].push({role:'user',text,time});
   input.value='';
   renderAgentMessages(STATE.selectedAgent);
-  
-  // Show loading
+
+  // Show loading indicator
   const msgsEl=document.getElementById('console-msgs');
   const loader=document.createElement('div');
   loader.className='console-loading';
@@ -1706,34 +1706,82 @@ async function sendToAgent(){
   loader.id='loading-indicator';
   msgsEl.appendChild(loader);
   msgsEl.scrollTop=msgsEl.scrollHeight;
-  
+
   document.getElementById('console-send-btn').disabled=true;
-  
+
   let reply='';
+
   if(STATE.apiKey){
     try{
-      // Build context
-      const portfolioSummary=`Portfólio BNDU: ${CASES.length} casos. Alta prioridade: ${CASES.filter(c=>c.prioridade==='alta').length}. Por fase: ${STAGES.map(s=>`${s.label}=${CASES.filter(c=>c.stage===s.id).length}`).join(', ')}. Carteira total: ${fmtCurrency(CASES.reduce((s,c)=>s+c.valorDivida,0))}.`;
-      
-      const messages=[
-        {role:'user',content:`CONTEXTO DO PORTFÓLIO: ${portfolioSummary}\n\nPERGUNTA: ${text}`}
-      ];
-      
+      // ── 1. Build rich portfolio context ──
+      const caseLines=CASES.map(c=>
+        `[${c.id}] ${c.veiculo.marca} ${c.veiculo.modelo} ${c.veiculo.ano}`+
+        ` | Devedor: ${c.devedor.nome}`+
+        ` | Dívida: ${fmtCurrency(c.valorDivida)}`+
+        ` | FIPE: ${fmtCurrency(c.fipe)}`+
+        ` | Fase: ${c.stage}`+
+        ` | Estado: ${c.estado}`+
+        ` | Prioridade: ${c.prioridade}`+
+        ` | Início: ${c.dInicio}`
+      ).join('\n');
+
+      const portfolioContext=
+        `=== PORTFÓLIO BNDU ===\n`+
+        `Total de casos: ${CASES.length}\n`+
+        `Carteira total: ${fmtCurrency(CASES.reduce((s,c)=>s+c.valorDivida,0))}\n`+
+        `Alta prioridade: ${CASES.filter(c=>c.prioridade==='alta').length} casos\n`+
+        `Por fase: ${STAGES.map(s=>`${s.label}=${CASES.filter(c=>c.stage===s.id).length}`).join(' | ')}\n\n`+
+        `=== CASOS DETALHADOS ===\n${caseLines}`;
+
+      // ── 2. Build conversation history for multi-turn memory ──
+      // STATE.agentMessages already has the current user msg appended above,
+      // so we use all of it — mapping to Anthropic's {role, content} format.
+      const history=STATE.agentMessages[STATE.selectedAgent];
+      const messages=history.map((m,i)=>{
+        let content=m.text;
+        // Inject portfolio context into every user turn so the model always
+        // has fresh data, regardless of where in the conversation we are.
+        if(m.role==='user'){
+          content=`${portfolioContext}\n\n=== PERGUNTA ===\n${m.text}`;
+        }
+        return {role:m.role==='user'?'user':'assistant', content};
+      });
+
+      // ── 3. Call Claude API ──
       const resp=await fetch('https://api.anthropic.com/v1/messages',{
         method:'POST',
-        headers:{'Content-Type':'application/json','x-api-key':STATE.apiKey,'anthropic-version':'2023-06-01'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:agent.prompt,messages})
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':STATE.apiKey,
+          'anthropic-version':'2023-06-01'
+        },
+        body:JSON.stringify({
+          model:'claude-sonnet-4-20250514',
+          max_tokens:1200,
+          system:agent.prompt,
+          messages
+        })
       });
+
       const data=await resp.json();
-      reply=data.content?.[0]?.text||'Erro ao obter resposta da API.';
+
+      if(data.error){
+        // Show the real API error so it's easy to diagnose
+        reply=`⚠️ Erro da API Claude (${data.error.type}): ${data.error.message}`;
+      } else {
+        reply=data.content?.[0]?.text||'Resposta vazia da API.';
+      }
+
     } catch(e){
-      reply=getSimulatedResponse(STATE.selectedAgent,text);
+      reply=`⚠️ Erro de conexão com a API: ${e.message}`;
     }
   } else {
+    // No key — fall back to simulation and nudge the user
     await new Promise(r=>setTimeout(r,1200+Math.random()*800));
-    reply=getSimulatedResponse(STATE.selectedAgent,text);
+    reply=getSimulatedResponse(STATE.selectedAgent,text)+
+      '\n\n---\n_Modo simulado — configure sua chave Claude em Configurações para respostas reais._';
   }
-  
+
   document.getElementById('loading-indicator')?.remove();
   STATE.agentMessages[STATE.selectedAgent].push({role:'assistant',text:reply,time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});
   renderAgentMessages(STATE.selectedAgent);
