@@ -1041,7 +1041,7 @@ let STATE = {
   portfolioView: 'kanban',
   filterStage: 'all',
   filterPriority: false,
-  apiKey: localStorage.getItem('bndu_api_key') || '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',
+  apiKey: (localStorage.getItem('bndu_api_key')||'').replace(/[^\x20-\x7E]/g,'').trim() || '',
   agentMessages: {},
   searchQuery: ''
 };
@@ -1071,20 +1071,41 @@ function doLogin(){
   if(!STATE.role){showToast('warning','Selecione seu perfil de acesso');return;}
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').classList.add('visible');
-  
+
   // Set user info
   const name=ROLE_NAMES[STATE.role];
   document.getElementById('sidebar-name').textContent=name;
   document.getElementById('sidebar-role').textContent=ROLE_LABELS[STATE.role];
   document.getElementById('sidebar-avatar').textContent=name.charAt(0);
-  
-  // Check API key
-  if(STATE.apiKey){
+
+  // ── Auto-prompt for API key if not configured ──
+  const keyInvalid = !STATE.apiKey
+    || STATE.apiKey==='YOUR_NEW_KEY_HERE'
+    || STATE.apiKey.trim()==='';
+
+  if(keyInvalid){
+    setTimeout(()=>{
+      const k = window.prompt(
+        '🔑 Cole aqui sua chave da API Claude (começa com sk-ant-api03-...)\n\n'+
+        'Você encontra em: console.anthropic.com → Settings → API Keys\n\n'+
+        'A chave será salva no seu navegador e não precisará inserir novamente.'
+      );
+      if(k && k.replace(/[^\x20-\x7E]/g,'').trim().startsWith('sk-')){
+        STATE.apiKey=k.replace(/[^\x20-\x7E]/g,'').trim();
+        localStorage.setItem('bndu_api_key',STATE.apiKey);
+        document.getElementById('api-dot').style.background='var(--cyan)';
+        document.getElementById('api-text').innerHTML='IA <span style="color:var(--cyan)">Claude API ✅</span>';
+        showToast('success','✅ Chave configurada! Os agentes agora respondem com Claude.');
+      } else if(k !== null){
+        showToast('error','⚠️ Chave inválida. Vá em Configurações para tentar novamente.');
+      }
+    }, 800);
+  } else {
     document.getElementById('api-dot').style.background='var(--cyan)';
-    document.getElementById('api-text').innerHTML='IA <span style="color:var(--cyan)">Claude API</span>';
+    document.getElementById('api-text').innerHTML='IA <span style="color:var(--cyan)">Claude API ✅</span>';
   }
-  
-  // Init views with demo data first, then reload from Supabase
+
+  // Init views
   document.getElementById('portfolio-badge').textContent=CASES.length;
   renderDashboard();
   renderPortfolio();
@@ -1092,10 +1113,9 @@ function doLogin(){
   renderLeilao();
   renderRelatorios();
   renderIntegracoes();
-  
+
   showToast('info',`👋 Bem-vindo(a), ${name.split(' ')[0]}! Conectando ao Supabase...`);
 
-  // Load real data from Supabase
   loadFromSupabase().then(()=>{
     document.getElementById('portfolio-badge').textContent=CASES.length;
     renderDashboard();
@@ -1752,8 +1772,9 @@ async function sendToAgent(){
         method:'POST',
         headers:{
           'Content-Type':'application/json',
-          'x-api-key':STATE.apiKey,
-          'anthropic-version':'2023-06-01'
+          'x-api-key':STATE.apiKey.replace(/[^\x20-\x7E]/g,'').trim(),
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
         },
         body:JSON.stringify({
           model:'claude-sonnet-4-20250514',
@@ -2055,12 +2076,13 @@ function showNotifications(){
 }
 
 function saveApiKeyFromSettings(){
-  const key=document.getElementById('settings-api-key').value.trim();
+  const raw=document.getElementById('settings-api-key').value;
+  const key=raw.replace(/[^\x20-\x7E]/g,'').trim();
   if(key){
     STATE.apiKey=key;
     localStorage.setItem('bndu_api_key',key);
     document.getElementById('api-dot').style.background='var(--cyan)';
-    document.getElementById('api-text').innerHTML='IA <span style="color:var(--cyan)">Claude API</span>';
+    document.getElementById('api-text').innerHTML='IA <span style="color:var(--cyan)">Claude API ✅</span>';
     showToast('success','✅ Chave da API Claude salva! Agentes IA habilitados.');
   }
 }
