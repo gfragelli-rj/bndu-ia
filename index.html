@@ -938,6 +938,47 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 @media(max-width:900px){
   #view-bliphub.active{left:0!important;}
 }
+
+/* ── VIN 360 ── */
+.vin360-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;}
+.vin360-dim{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 14px;}
+.vin360-dim-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.vin360-dim-icon{font-size:18px;flex-shrink:0;}
+.vin360-dim-title{font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;color:var(--text2);}
+.vin360-dim-badge{margin-left:auto;font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;font-family:'IBM Plex Mono',monospace;}
+.vin360-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:11.5px;}
+.vin360-row:last-child{border-bottom:none;}
+.vin360-row-label{color:var(--text3);}
+.vin360-row-val{font-weight:500;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:11px;}
+.vin360-row-val.ok{color:var(--green);}
+.vin360-row-val.warn{color:var(--amber);}
+.vin360-row-val.danger{color:var(--red);}
+.vin360-score{display:flex;align-items:center;gap:8px;margin-top:8px;}
+.vin360-score-bar{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.vin360-score-fill{height:100%;border-radius:3px;transition:width .4s;}
+.vin360-score-val{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;min-width:28px;text-align:right;}
+.vin360-header-box{background:linear-gradient(135deg,rgba(0,196,232,.08),transparent);border:1px solid rgba(0,196,232,.2);border-radius:10px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:14px;}
+.vin360-vin-code{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:var(--cyan);letter-spacing:.08em;}
+.vin360-completeness{font-size:10px;color:var(--text3);}
+.vin360-photo-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.vin360-photo{width:48px;height:36px;border-radius:5px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--bg3);}
+.vin360-conv-item{display:flex;gap:7px;align-items:flex-start;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;}
+.vin360-conv-item:last-child{border-bottom:none;}
+.vin360-conv-role{flex-shrink:0;font-size:9px;font-weight:700;color:var(--text3);padding:1px 5px;background:var(--bg3);border-radius:3px;margin-top:1px;}
+.vin360-conv-text{color:var(--text2);line-height:1.4;}
+/* Sidebar nav item */
+.nav-item.vin360-nav{background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.18);margin-bottom:4px;}
+.nav-item.vin360-nav.active{background:rgba(245,166,35,.18);border-color:rgba(245,166,35,.45);}
+/* View */
+#view-vin360.active{display:flex!important;flex-direction:column;position:fixed!important;top:60px;left:var(--sidebar-w);right:0;bottom:0;z-index:10;overflow-y:auto;background:var(--bg);padding:20px 24px;}
+#view-vin360{display:none;}
+.vin360-explorer-header{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+.vin360-explorer-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--text);}
+.vin360-case-selector{flex:1;max-width:320px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text);cursor:pointer;}
+.vin360-case-selector:focus{outline:none;border-color:var(--amber);}
+.vin360-full-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media(max-width:1100px){.vin360-full-grid{grid-template-columns:1fr 1fr;}}
+
 </style>
 </head>
 <body>
@@ -1023,6 +1064,10 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
         <div class="nav-item" onclick="navigate('agents')" id="nav-agents">
           <span class="nav-icon">🤖</span><span class="nav-label">Agentes de IA</span>
           <span class="nav-badge nav-badge-cyan" id="agents-badge">8</span>
+        </div>
+        <div class="nav-item vin360-nav" onclick="navigate('vin360')" id="nav-vin360">
+          <span class="nav-icon">🚗</span><span class="nav-label">VIN 360</span>
+          <span class="nav-badge" style="background:var(--amber)">Novo</span>
         </div>
         <div class="nav-item blip-nav" onclick="navigate('bliphub')" id="nav-bliphub">
           <span class="nav-icon">💬</span><span class="nav-label">Blip Hub</span>
@@ -1130,6 +1175,20 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
         </div>
       </div>
 
+
+
+      <!-- VIN 360 view -->
+      <div class="view" id="view-vin360">
+        <div class="vin360-explorer-header">
+          <div>
+            <div class="vin360-explorer-title">🚗 VIN 360 — Perfil Unificado do Veículo</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px;">7 dimensões consolidadas em tempo real · clique em qualquer caso para explorar</div>
+          </div>
+          <select class="vin360-case-selector" id="vin360-selector" onchange="renderVin360Explorer()">
+          </select>
+        </div>
+        <div id="vin360-content"></div>
+      </div>
 
       <!-- ── BLIP HUB VIEW ── -->
       <div class="view" id="view-bliphub" style="">
@@ -1274,6 +1333,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
     <div class="panel-tab" onclick="switchPanelTab('debitos',this)">Débitos</div>
     <div class="panel-tab" onclick="switchPanelTab('documentos',this)">Documentos</div>
     <div class="panel-tab" style="color:var(--cyan)" onclick="openBlipForCase(STATE.selectedCase,event)">💬 Blip</div>
+    <div class="panel-tab" style="color:var(--amber)" onclick="switchPanelTab('vin360',this)">🚗 VIN 360</div>
   </div>
   <div class="panel-body">
     <div class="panel-tab-content active" id="tab-visao"></div>
@@ -1411,6 +1471,103 @@ let CASES = [
 // ══════════════════════════════════════
 //  SUPABASE CONFIG
 // ══════════════════════════════════════
+
+// ── VIN 360 enrichment — adds mock dimensional data to each case ──────────
+function enrichVin360(c) {
+  const stageMap = {
+    inadimplencia: {judicial:'aguardando',patio:null,   vistoria:null,    fipeScore:78},
+    negociacao:    {judicial:'notificado', patio:null,   vistoria:null,    fipeScore:75},
+    execucao:      {judicial:'peticionado',patio:null,   vistoria:null,    fipeScore:72},
+    retomada:      {judicial:'deferida',   patio:'trânsito',vistoria:null, fipeScore:68},
+    vistoria:      {judicial:'cumprida',   patio:'entrada',vistoria:'parcial',fipeScore:65},
+    sanitizacao:   {judicial:'cumprida',   patio:'pátio', vistoria:'completa',fipeScore:62},
+    avaliacao:     {judicial:'cumprida',   patio:'pátio', vistoria:'aprovada',fipeScore:60},
+    leilao:        {judicial:'cumprida',   patio:'aguard_leilao',vistoria:'aprovada',fipeScore:58},
+    baixa:         {judicial:'encerrado',  patio:'saída', vistoria:'aprovada',fipeScore:55},
+  };
+  const sm = stageMap[c.stage] || stageMap.inadimplencia;
+  const totalDebito = (c.debitos?.ipva||0)+(c.debitos?.multas||0)+(c.debitos?.taxas||0);
+
+  return {
+    // Dimensão identificação
+    identificacao: {
+      vin: c.veiculo.chassi || '9BW'+c.id.replace('-','')+'VT',
+      placa: c.veiculo.placa,
+      renavam: c.veiculo.renavam || '001'+c.id.replace('BND-','')+'000',
+      chassi: c.veiculo.chassi || 'MOCK',
+      marca: c.veiculo.marca,
+      modelo: c.veiculo.modelo,
+      ano: c.veiculo.ano,
+      cor: c.veiculo.cor,
+    },
+    // Dimensão crédito
+    credito: {
+      contrato: c.contrato,
+      saldoDevedor: c.valorDivida,
+      parcelasAtraso: Math.floor(c.valorDivida / 1800),
+      prazoOriginal: 48,
+      dataVencimento: '2021-03-15',
+    },
+    // Dimensão jurídica
+    juridico: {
+      status: sm.judicial,
+      processo: sm.judicial !== 'aguardando' ? `0${c.id.replace('BND-','')}-12.2024.8.26.0100` : null,
+      tribunal: sm.judicial !== 'aguardando' ? 'TJSP — 2ª Vara Cível' : null,
+      dataLiminar: sm.judicial === 'deferida' || sm.judicial === 'cumprida' ? '2024-11-15' : null,
+    },
+    // Dimensão localização
+    localizacao: {
+      statusFisico: sm.patio,
+      patio: sm.patio && sm.patio !== 'trânsito' ? `Pátio ${c.estado}-0${(parseInt(c.id.replace('BND-',''))%5)+1}` : null,
+      vaga: sm.patio === 'pátio' || sm.patio === 'aguard_leilao' ? `${Math.floor(Math.random()*9)+1}${String.fromCharCode(65+parseInt(c.id.replace('BND-',''))%8)}-${Math.floor(Math.random()*20)+1}` : null,
+      lat: sm.patio ? -23.55 - Math.random()*5 : null,
+      lng: sm.patio ? -46.63 - Math.random()*5 : null,
+    },
+    // Dimensão débitos
+    debitos: {
+      ipva: c.debitos?.ipva || 0,
+      dpvat: c.debitos?.dpvat || 0,
+      multas: c.debitos?.multas || 0,
+      taxas: c.debitos?.taxas || 0,
+      total: totalDebito,
+      status: totalDebito === 0 ? 'quitado' : (c.stage === 'sanitizacao' ? 'em_quitacao' : 'pendente'),
+    },
+    // Dimensão vistoria
+    vistoria: {
+      status: sm.vistoria,
+      estadoGeral: sm.vistoria ? (sm.vistoria === 'completa' || sm.vistoria === 'aprovada' ? 4 : 3) : null,
+      odometro: sm.vistoria ? 42000 + parseInt(c.id.replace('BND-','')) * 1800 : null,
+      laudoURL: sm.vistoria === 'aprovada' ? '#' : null,
+      fotos: sm.vistoria ? ['📷','📷','📷','📷'] : [],
+    },
+    // Dimensão valorização
+    valorizacao: {
+      fipe: c.fipe,
+      precoML: Math.round(c.fipe * (sm.fipeScore/100)),
+      variacaoMensal: -1.5,
+      lanceMinimoSugerido: Math.round(c.fipe * (sm.fipeScore/100) * 0.9),
+      fipeScore: sm.fipeScore,
+    },
+    // Dimensão conversacional — referencia BH_CHATS
+    conversacional: {
+      totalMensagens: c.historico?.length ? c.historico.length * 3 : 0,
+      ultimaInteracao: c.historico?.length ? c.historico[c.historico.length-1]?.data : null,
+      evidenciaJuridica: ['execucao','retomada','vistoria','sanitizacao','avaliacao','leilao','baixa'].includes(c.stage),
+    },
+    // Score de completude do perfil (0-100)
+    completude: Math.min(100, 20
+      + (c.veiculo.chassi ? 15 : 0)
+      + (sm.judicial !== 'aguardando' ? 15 : 0)
+      + (sm.patio ? 15 : 0)
+      + (sm.vistoria ? 20 : 0)
+      + (totalDebito === 0 ? 15 : (c.stage === 'sanitizacao' ? 5 : 0))
+    ),
+  };
+}
+
+// Enrich all cases on load
+CASES.forEach(c => { c.vin360 = enrichVin360(c); });
+
 const SUPABASE_URL  = 'https://ibxhwhqdqwpuxbeerhkw.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlieGh3aHFkcXdwdXhiZWVyaGt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMTY0NjcsImV4cCI6MjA4OTU5MjQ2N30.arYoMo7G4rVjGP1XqsOCBQvaePjsTANUygxywxlAH8Y';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -1465,6 +1622,7 @@ async function loadFromSupabase() {
     if (data && data.length > 0) {
       CASES.length = 0;
       data.forEach(row => CASES.push(mapSupabaseCaso(row)));
+      CASES.forEach(c=>{ c.vin360=enrichVin360(c); });
       showToast('success', `✅ Supabase: ${CASES.length} casos carregados do banco`);
     } else {
       showToast('info', 'ℹ️ Supabase conectado — banco vazio, exibindo dados demo');
@@ -1629,11 +1787,13 @@ function navigate(view){
     relatorios:['Relatórios','Analytics e KPIs avançados'],
     integracoes:['Integrações','Status das conexões com sistemas externos'],
     configuracoes:['Configurações','Preferências e configurações da plataforma'],
-    bliphub:['💬 Blip Hub','Central de conversas — WhatsApp Business API · NLU · IA Generativa']
+    bliphub:['💬 Blip Hub','Central de conversas — WhatsApp Business API · NLU · IA Generativa'],
+    vin360:['🚗 VIN 360','Perfil Unificado do Veículo — 7 dimensões em tempo real']
   };
   const t=titles[view]||['BNDU.ia',''];
   document.getElementById('header-title').innerHTML=t[0]+` <span>${t[1]}</span>`;
   if(view==='bliphub') renderBlipHub();
+  if(view==='vin360') renderVin360Explorer();
 }
 
 // ══════════════════════════════════════
@@ -1941,10 +2101,169 @@ function closePanel(){
   STATE.selectedCase=null;
 }
 
+function renderVin360Card(c) {
+  const v = c.vin360;
+  if(!v) return '<div class="vin360-dim" style="grid-column:1/-1">Dados VIN 360 não disponíveis</div>';
+
+  const scoreColor = v.completude >= 80 ? 'var(--green)' : v.completude >= 50 ? 'var(--amber)' : 'var(--red)';
+
+  // Helper
+  const dim = (icon, title, badgeTxt, badgeColor, rows, extra='') => `
+    <div class="vin360-dim">
+      <div class="vin360-dim-hdr">
+        <div class="vin360-dim-icon">${icon}</div>
+        <div class="vin360-dim-title">${title}</div>
+        <div class="vin360-dim-badge" style="background:${badgeColor}22;color:${badgeColor}">${badgeTxt}</div>
+      </div>
+      ${rows.map(r=>`<div class="vin360-row"><span class="vin360-row-label">${r[0]}</span><span class="vin360-row-val${r[2]?' '+r[2]:''}">${r[1]}</span></div>`).join('')}
+      ${extra}
+    </div>`;
+
+  const fmtR = x => x ? 'R$ '+x.toLocaleString('pt-BR') : '—';
+  const fmtS = s => ({aguardando:'⏳ Aguardando',notificado:'📨 Notificado',peticionado:'⚖️ Peticionado',deferida:'✅ Deferida',cumprida:'✅ Cumprida',encerrado:'🔒 Encerrado'}[s]||s||'—');
+  const fmtL = s => s ? ({trânsito:'🚛 Em trânsito',entrada:'🏭 Entrada',pátio:'📍 No pátio',aguard_leilao:'🏷️ Aguard. leilão',saída:'✅ Saída'}[s]||s) : '—';
+  const fmtV = s => ({parcial:'🔍 Parcial',completa:'📋 Completa',aprovada:'✅ Aprovada'}[s]||s||'—');
+  const fmtD = s => ({pendente:'🔴 Pendente',em_quitacao:'🟡 Em quitação',quitado:'✅ Quitado'}[s]||s||'—');
+
+  const completBar = `<div class="vin360-score">
+    <div style="font-size:10px;color:var(--text3)">Completude</div>
+    <div class="vin360-score-bar"><div class="vin360-score-fill" style="width:${v.completude}%;background:${scoreColor}"></div></div>
+    <div class="vin360-score-val" style="color:${scoreColor}">${v.completude}%</div>
+  </div>`;
+
+  const photos = v.vistoria.fotos.length
+    ? `<div class="vin360-photo-row">${v.vistoria.fotos.map(f=>`<div class="vin360-photo">${f}</div>`).join('')}</div>`
+    : '<div style="font-size:10px;color:var(--text3);margin-top:6px">Sem fotos registradas</div>';
+
+  const convRows = c.historico?.slice(-3).reverse().map(ev =>
+    `<div class="vin360-conv-item">
+      <span class="vin360-conv-role">${ev.agente.split(' ')[0]}</span>
+      <span class="vin360-conv-text">${ev.texto}</span>
+    </div>`).join('') || '<div style="font-size:10px;color:var(--text3)">Sem interações registradas</div>';
+
+  return `
+    <div class="vin360-header-box">
+      <div>
+        <div class="vin360-vin-code">${v.identificacao.chassi}</div>
+        <div class="vin360-completude">VIN · Perfil ${v.completude}% completo</div>
+      </div>
+      <div style="flex:1">${completBar}</div>
+      <button class="blip-shortcut-btn sm" onclick="navigate('vin360');document.getElementById('vin360-selector').value='${c.id}';renderVin360Explorer()">
+        🔍 Explorador VIN 360
+      </button>
+    </div>
+    <div class="vin360-grid">
+      ${dim('🆔','Identificação','Veículo',v.identificacao.vin?'var(--cyan)':'var(--text3)',[
+        ['VIN / Chassi', v.identificacao.chassi],
+        ['Placa',        v.identificacao.placa],
+        ['Renavam',      v.identificacao.renavam||'—'],
+        ['Cor / Ano',    v.identificacao.cor+' · '+v.identificacao.ano],
+      ])}
+      ${dim('💳','Crédito','Core bancário','var(--blip)',[
+        ['Contrato',     v.credito.contrato],
+        ['Saldo devedor',fmtR(v.credito.saldoDevedor),v.credito.saldoDevedor>50000?'warn':''],
+        ['Parcelas atraso',v.credito.parcelasAtraso+'x', v.credito.parcelasAtraso>6?'danger':'warn'],
+        ['Vencimento',   v.credito.dataVencimento],
+      ])}
+      ${dim('⚖️','Jurídico',fmtS(v.juridico.status),
+        v.juridico.status==='cumprida'||v.juridico.status==='encerrado'?'var(--green)':v.juridico.status==='deferida'?'var(--cyan)':'var(--amber)',[
+        ['Status',       fmtS(v.juridico.status)],
+        ['Processo',     v.juridico.processo||'—'],
+        ['Tribunal',     v.juridico.tribunal||'—'],
+        ['Data liminar', v.juridico.dataLiminar||'—'],
+      ])}
+      ${dim('📍','Localização',fmtL(v.localizacao.statusFisico)||'Devedor',
+        v.localizacao.patio?'var(--green)':'var(--amber)',[
+        ['Status físico',  fmtL(v.localizacao.statusFisico)],
+        ['Pátio',          v.localizacao.patio||'—'],
+        ['Vaga',           v.localizacao.vaga||'—'],
+        ['GPS',            v.localizacao.lat?v.localizacao.lat.toFixed(4)+','+v.localizacao.lng.toFixed(4):'—'],
+      ])}
+      ${dim('💰','Débitos',fmtD(v.debitos.status),
+        v.debitos.status==='quitado'?'var(--green)':v.debitos.status==='em_quitacao'?'var(--amber)':'var(--red)',[
+        ['IPVA',           fmtR(v.debitos.ipva),    v.debitos.ipva?'warn':'ok'],
+        ['Multas',         fmtR(v.debitos.multas),  v.debitos.multas?'warn':'ok'],
+        ['Taxas/Licen.',   fmtR(v.debitos.taxas),   v.debitos.taxas?'warn':'ok'],
+        ['Total pendente', fmtR(v.debitos.total),   v.debitos.total>3000?'danger':v.debitos.total?'warn':'ok'],
+      ])}
+      ${dim('🔍','Vistoria',v.vistoria.status?fmtV(v.vistoria.status):'Não realizada',
+        v.vistoria.status==='aprovada'?'var(--green)':v.vistoria.status?'var(--amber)':'var(--text3)',[
+        ['Status',         v.vistoria.status?fmtV(v.vistoria.status):'—'],
+        ['Estado (1-5)',   v.vistoria.estadoGeral?'⭐'.repeat(v.vistoria.estadoGeral):'—'],
+        ['Odômetro',       v.vistoria.odometro?v.vistoria.odometro.toLocaleString('pt-BR')+' km':'—'],
+      ], photos)}
+      ${dim('📈','Valorização','FIPE','var(--amber)',[
+        ['FIPE atual',     fmtR(v.valorizacao.fipe)],
+        ['Preço ML',       fmtR(v.valorizacao.precoML)],
+        ['Lance mínimo',   fmtR(v.valorizacao.lanceMinimoSugerido)],
+        ['Var. mensal',    v.valorizacao.variacaoMensal+'%','warn'],
+      ], `<div class="vin360-score" style="margin-top:8px">
+        <div style="font-size:10px;color:var(--text3)">Retenção FIPE</div>
+        <div class="vin360-score-bar"><div class="vin360-score-fill" style="width:${v.valorizacao.fipeScore}%;background:var(--amber)"></div></div>
+        <div class="vin360-score-val" style="color:var(--amber)">${v.valorizacao.fipeScore}%</div>
+      </div>`)}
+      <div class="vin360-dim" style="grid-column:1/-1">
+        <div class="vin360-dim-hdr">
+          <div class="vin360-dim-icon">💬</div>
+          <div class="vin360-dim-title">Conversacional · Blip Hub</div>
+          <div class="vin360-dim-badge" style="background:${v.conversacional.evidenciaJuridica?'var(--green)':'var(--text3)'}22;color:${v.conversacional.evidenciaJuridica?'var(--green)':'var(--text3)'}">
+            ${v.conversacional.evidenciaJuridica?'✅ Evidência jurídica':'Sem evidência'}
+          </div>
+          <button class="blip-shortcut-btn sm" style="margin-left:auto" onclick="openBlipForCase('${c.id}',event)">Ver conversas →</button>
+        </div>
+        <div style="font-size:10.5px;color:var(--text3);margin-bottom:6px">${v.conversacional.totalMensagens} mensagens registradas · Última: ${v.conversacional.ultimaInteracao||'—'}</div>
+        ${convRows}
+      </div>
+    </div>`;
+}
+
+function renderVin360Explorer() {
+  const sel = document.getElementById('vin360-selector');
+  const content = document.getElementById('vin360-content');
+  if(!sel || !content) return;
+
+  // Populate selector
+  if(sel.options.length === 0){
+    CASES.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.id + ' — ' + c.veiculo.marca + ' ' + c.veiculo.modelo + ' (' + c.veiculo.ano + ')';
+      sel.appendChild(opt);
+    });
+  }
+
+  const caseId = sel.value || CASES[0]?.id;
+  if(!caseId) return;
+
+  const c = CASES.find(x => x.id === caseId);
+  if(!c) return;
+  if(!c.vin360) c.vin360 = enrichVin360(c);
+
+  content.innerHTML = renderVin360Card(c);
+}
+
 function switchPanelTab(tab,el){
   document.querySelectorAll('.panel-tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.panel-tab-content').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
+  if(tab==='vin360'){
+    // VIN 360 tab renders dynamically
+    const c = CASES.find(x=>x.id===STATE.selectedCase);
+    if(c){
+      if(!c.vin360) c.vin360 = enrichVin360(c);
+      // Create/update vin360 tab content
+      let tabEl = document.getElementById('tab-vin360');
+      if(!tabEl){
+        tabEl = document.createElement('div');
+        tabEl.id = 'tab-vin360';
+        tabEl.className = 'panel-tab-content';
+        document.getElementById('panel-content').appendChild(tabEl);
+      }
+      tabEl.innerHTML = renderVin360Card(c);
+      tabEl.classList.add('active');
+    }
+    return;
+  }
   document.getElementById('tab-'+tab).classList.add('active');
 }
 
