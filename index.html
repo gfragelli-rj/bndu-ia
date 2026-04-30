@@ -2287,8 +2287,8 @@ function getFilteredCases(){
   if(portfolioFilterStage!=='all') cases=cases.filter(c=>c.stage===portfolioFilterStage);
   if(portfolioFilterPriority) cases=cases.filter(c=>c.prioridade==='alta');
   return cases;
-  } // end role kpis
-    renderBlipDashStrip();
+    } // close gestor else
+  renderBlipDashStrip();
   renderAnalistaQueue();
 }
 
