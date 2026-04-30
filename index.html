@@ -245,6 +245,53 @@ function openBlipTab(tabKey){
   renderBlipHub();
 }
 
+
+function renderAnalistaQueue() {
+  const el = document.getElementById('analista-queue');
+  if(!el) return;
+  if(STATE.role !== 'analista') { el.style.display='none'; return; }
+  el.style.display = '';
+
+  const items = [
+    {icon:'💰', title:'Aprovação de preço de reserva — BND-007', sub:'Auction Agent: R$ 39.500 (82% FIPE) — abaixo do limite', case:'BND-007'},
+    {icon:'💳', title:'Pagamento de débitos — BND-006', sub:'Tax Agent: R$ 2.760 total — IPVA + multas SC', case:'BND-006'},
+    {icon:'⚖️', title:'Exceção judicial — BND-012', sub:'Legal Agent: liminar não cumprida em 5 dias — ação manual', case:'BND-012'},
+  ];
+
+  el.innerHTML = `<div class="approval-queue">
+    <div class="approval-queue-hdr">
+      <span style="font-size:16px">⏳</span>
+      <div class="approval-queue-title">Fila de Aprovação — ${items.length} itens aguardando você</div>
+      <div class="nav-badge" style="background:var(--amber);margin-left:auto">${items.length}</div>
+    </div>
+    ${items.map(item => `
+      <div class="approval-item">
+        <div class="approval-item-icon">${item.icon}</div>
+        <div class="approval-item-body">
+          <div class="approval-item-title">${item.title}</div>
+          <div class="approval-item-sub">${item.sub}</div>
+        </div>
+        <div class="approval-item-actions">
+          <button class="btn-approve" onclick="handleApproval('${item.case}','approve',this)">✓ Aprovar</button>
+          <button class="btn-reject"  onclick="handleApproval('${item.case}','reject',this)">✗</button>
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+function handleApproval(caseId, action, btn) {
+  const row = btn.closest('.approval-item');
+  row.style.opacity = '0.4';
+  row.style.pointerEvents = 'none';
+  showToast(action==='approve'?'success':'info',
+    action==='approve'
+      ? `✅ ${caseId} aprovado — Agente retomará o fluxo`
+      : `↩️ ${caseId} rejeitado — Agente notificado`);
+  // Re-render queue after short delay
+  setTimeout(()=>{ row.remove(); }, 800);
+}
+
+
 function renderBlipDashStrip(){
   var el = document.getElementById('blip-dash-strip');
   if(!el) return;
@@ -979,6 +1026,58 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .vin360-full-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
 @media(max-width:1100px){.vin360-full-grid{grid-template-columns:1fr 1fr;}}
 
+
+/* ── RBAC Role Theming ── */
+.app-root[data-role="gestor"]    { --role-accent: var(--cyan);   }
+.app-root[data-role="analista"]  { --role-accent: #7C4DFF;       }
+.app-root[data-role="campo"]     { --role-accent: var(--green);  }
+.app-root[data-role="leiloeiro"] { --role-accent: var(--amber);  }
+
+.role-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;font-family:'IBM Plex Mono',monospace;letter-spacing:.04em;}
+
+/* Campo — simplified mobile-first layout */
+.app-root[data-role="campo"] .sidebar{ width:0;overflow:hidden;padding:0;border:none; }
+.app-root[data-role="campo"] .main-area{ width:100%; }
+.app-root[data-role="campo"] .campo-topbar{display:flex!important;}
+.campo-topbar{display:none;align-items:center;gap:12px;padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5;}
+.campo-nav{display:flex;gap:6px;overflow-x:auto;padding:0 2px;}
+.campo-nav-btn{flex-shrink:0;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:12px;font-weight:600;cursor:pointer;color:var(--text2);transition:all .15s;}
+.campo-nav-btn.active{background:rgba(6,214,160,.15);border-color:var(--green);color:var(--green);}
+.campo-nav-btn:hover:not(.active){color:var(--text);}
+
+/* Campo field card — bigger touch targets */
+.app-root[data-role="campo"] .kanban-card{ padding:16px; }
+.app-root[data-role="campo"] .panel-action-btn{ min-height:44px;font-size:14px; }
+
+/* Leiloeiro — restricted, auction-only */
+.leiloeiro-banner{background:linear-gradient(90deg,rgba(245,166,35,.12),transparent);border:1px solid rgba(245,166,35,.25);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;}
+.leiloeiro-banner-icon{font-size:24px;flex-shrink:0;}
+.leiloeiro-banner-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--amber);}
+.leiloeiro-banner-sub{font-size:11px;color:var(--text3);}
+
+/* Role badge in sidebar */
+.sidebar-user-role-pill{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;margin-top:3px;display:inline-block;font-family:'IBM Plex Mono',monospace;}
+
+/* Approval queue (analista) */
+.approval-queue{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;}
+.approval-queue-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.approval-queue-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);}
+.approval-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);}
+.approval-item:last-child{border-bottom:none;}
+.approval-item-icon{font-size:20px;flex-shrink:0;}
+.approval-item-body{flex:1;min-width:0;}
+.approval-item-title{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.approval-item-sub{font-size:11px;color:var(--text3);}
+.approval-item-actions{display:flex;gap:6px;flex-shrink:0;}
+.btn-approve{padding:6px 12px;border-radius:6px;border:none;background:rgba(6,214,160,.15);color:var(--green);font-size:11.5px;font-weight:700;cursor:pointer;border:1px solid rgba(6,214,160,.3);}
+.btn-reject{padding:6px 12px;border-radius:6px;border:none;background:rgba(240,90,79,.1);color:var(--red);font-size:11.5px;font-weight:700;cursor:pointer;border:1px solid rgba(240,90,79,.25);}
+
+/* Restricted overlay */
+.restricted-view{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;}
+.restricted-icon{font-size:48px;margin-bottom:12px;opacity:.4;}
+.restricted-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text2);margin-bottom:6px;}
+.restricted-sub{font-size:12.5px;color:var(--text3);}
+
 </style>
 </head>
 <body>
@@ -1031,7 +1130,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 <!-- ══════════════════════════════════════
      APP SHELL
 ══════════════════════════════════════ -->
-<div id="app">
+<div id="app" class="app-root" data-role="gestor">
   <!-- SIDEBAR -->
   <nav class="sidebar">
     <div class="sidebar-logo">
@@ -1099,6 +1198,16 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
   <!-- MAIN AREA -->
   <div class="main-area">
     <!-- HEADER -->
+    <div class="campo-topbar" id="campo-topbar">
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--green);white-space:nowrap;">⚡ BNDU.ia</div>
+      <div class="campo-nav" id="campo-nav">
+        <button class="campo-nav-btn active" onclick="campoNavigate('retomada',this)">🚛 Retomada</button>
+        <button class="campo-nav-btn" onclick="campoNavigate('vistoria',this)">🔍 Vistoria</button>
+        <button class="campo-nav-btn" onclick="campoNavigate('bliphub',this)">💬 Blip</button>
+        <button class="campo-nav-btn" onclick="campoNavigate('checklist',this)">✅ Checklist</button>
+      </div>
+      <div id="campo-user" style="font-size:11px;color:var(--text3);white-space:nowrap;margin-left:auto;"></div>
+    </div>
     <div class="header">
       <div class="header-title" id="header-title">Dashboard <span id="header-sub">Visão geral do portfólio BNDU</span></div>
       <div class="header-search">
@@ -1121,6 +1230,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
       <div class="view active" id="view-dashboard">
         <div class="kpi-grid" id="kpi-grid"></div>
         <div class="blip-dash-strip" id="blip-dash-strip"></div>
+        <div id="analista-queue" style="display:none"></div>
         <div class="dash-grid" id="dash-grid"></div>
         <div class="dash-grid2" id="dash-grid2"></div>
       </div>
@@ -1709,6 +1819,125 @@ function saveApiKey(){
   else{showToast('error','⚠️ Digite uma chave válida');}
 }
 
+
+// ── RBAC: Role configuration ─────────────────────────────────────────────
+const ROLE_CONFIG = {
+  gestor: {
+    label:'Gestor / Diretor', icon:'📊', color:'var(--cyan)',
+    nav: ['dashboard','portfolio','leilao','vin360','agents','bliphub','relatorios','integracoes','configuracoes'],
+    defaultView: 'dashboard',
+    dashboardKpis: ['total','carteira','leadtime','leilao'],
+    canViewDebtorCPF: true,
+    canApprove: true,
+  },
+  analista: {
+    label:'Analista BNDU', icon:'🔍', color:'#7C4DFF',
+    nav: ['dashboard','portfolio','vin360','agents','bliphub','integracoes'],
+    defaultView: 'portfolio',
+    dashboardKpis: ['meusCasos','aprovacoes','alertas','blipmsgs'],
+    canViewDebtorCPF: true,
+    canApprove: true,
+  },
+  campo: {
+    label:'Agente de Campo', icon:'🚛', color:'var(--green)',
+    nav: ['bliphub'],  // campo uses its own top nav
+    defaultView: 'portfolio',
+    dashboardKpis: ['emCampo','vistoriasHoje','blipMsgs','urgentes'],
+    canViewDebtorCPF: false,
+    canApprove: false,
+    mobileMode: true,
+    stageFilter: ['retomada','vistoria'],
+  },
+  leiloeiro: {
+    label:'Leiloeiro Parceiro', icon:'🏷️', color:'var(--amber)',
+    nav: ['leilao'],
+    defaultView: 'leilao',
+    dashboardKpis: ['lotesDisp','leilaoAberto','melhorLance','comissao'],
+    canViewDebtorCPF: false,
+    canApprove: false,
+    leilaoOnly: true,
+  },
+};
+
+function applyRole(role) {
+  const cfg = ROLE_CONFIG[role] || ROLE_CONFIG.gestor;
+
+  // Set data-role on app root for CSS
+  document.getElementById('app').setAttribute('data-role', role);
+
+  // Role pill color in sidebar
+  const pill = document.getElementById('sidebar-role');
+  if(pill) {
+    pill.className = 'sidebar-user-role sidebar-user-role-pill';
+    pill.style.background = cfg.color + '22';
+    pill.style.color = cfg.color;
+  }
+
+  // Show/hide nav items
+  const ALL_NAVS = ['dashboard','portfolio','leilao','vin360','agents','bliphub','relatorios','integracoes','configuracoes'];
+  ALL_NAVS.forEach(id => {
+    const el = document.getElementById('nav-' + id);
+    if(el) el.style.display = cfg.nav.includes(id) ? '' : 'none';
+  });
+
+  // Nav section labels — hide if all items in section are hidden
+  document.querySelectorAll('.nav-section').forEach(sec => {
+    const visibleItems = Array.from(sec.querySelectorAll('.nav-item'))
+      .filter(el => el.style.display !== 'none');
+    sec.style.display = visibleItems.length === 0 ? 'none' : '';
+  });
+
+  // Campo mode: hide sidebar, show top bar
+  if(role === 'campo') {
+    document.querySelector('.sidebar').style.display = 'none';
+    document.getElementById('campo-topbar').style.display = 'flex';
+    document.getElementById('campo-user').textContent = ROLE_NAMES[role];
+  } else {
+    document.querySelector('.sidebar').style.display = '';
+    document.getElementById('campo-topbar').style.display = 'none';
+  }
+
+  // Leiloeiro: show banner on leilao view
+  if(role === 'leiloeiro') {
+    const existing = document.getElementById('leiloeiro-banner');
+    if(!existing) {
+      const leilaoView = document.getElementById('view-leilao');
+      if(leilaoView) {
+        const banner = document.createElement('div');
+        banner.id = 'leiloeiro-banner';
+        banner.className = 'leiloeiro-banner';
+        banner.innerHTML = `
+          <div class="leiloeiro-banner-icon">🏷️</div>
+          <div>
+            <div class="leiloeiro-banner-title">Portal do Leiloeiro — Acesso Restrito</div>
+            <div class="leiloeiro-banner-sub">Você visualiza apenas os lotes disponíveis para leilão. Dados do devedor e valores de dívida são ocultados por política do banco.</div>
+          </div>`;
+        leilaoView.prepend(banner);
+      }
+    }
+  }
+}
+
+function campoNavigate(target, btn) {
+  // Campo's simplified top nav
+  document.querySelectorAll('.campo-nav-btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+
+  if(target === 'bliphub') { navigate('bliphub'); return; }
+  if(target === 'checklist') {
+    navigate('portfolio');
+    // Filter to only retomada/vistoria
+    STATE.filterStage = 'retomada';
+    renderPortfolio();
+    return;
+  }
+  // Filter portfolio by stage
+  navigate('portfolio');
+  STATE.filterStage = target;
+  renderPortfolio();
+}
+
+
 function doLogin(){
   if(!STATE.role){showToast('warning','Selecione seu perfil de acesso');return;}
   document.getElementById('login-screen').style.display='none';
@@ -1720,6 +1949,9 @@ function doLogin(){
   document.getElementById('sidebar-role').textContent=ROLE_LABELS[STATE.role];
   document.getElementById('sidebar-avatar').textContent=name.charAt(0);
   
+  // Apply role-based layout
+  applyRole(STATE.role);
+
   // Auto-prompt for API key if missing
   const _keyOk = STATE.apiKey && STATE.apiKey.trim() !== '';
   if(!_keyOk){
@@ -1770,6 +2002,12 @@ function doLogin(){
 //  NAVIGATION
 // ══════════════════════════════════════
 function navigate(view){
+  // Role-based navigation guard
+  const _roleCfg = ROLE_CONFIG[STATE.role] || ROLE_CONFIG.gestor;
+  if(_roleCfg.nav.length > 0 && !_roleCfg.nav.includes(view) && STATE.role !== 'gestor') {
+    showToast('warning', '🔒 Acesso restrito para o perfil ' + _roleCfg.label);
+    return;
+  }
   STATE.view=view;
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -1812,7 +2050,95 @@ function renderDashboard(){
   },0)/total);
 
   // KPI Grid
-  document.getElementById('kpi-grid').innerHTML=`
+  // ── Role-aware KPI rendering ──
+  const role = STATE.role || 'gestor';
+  const meusCasos = CASES.filter(c=>c.responsavel===ROLE_NAMES[role]);
+  const emCampo   = CASES.filter(c=>['retomada','vistoria'].includes(c.stage));
+  const urgentes  = CASES.filter(c=>c.prioridade==='alta'&&['retomada','vistoria'].includes(c.stage));
+  const emLeilaoFull = CASES.filter(c=>['leilao','avaliacao'].includes(c.stage));
+
+  if(role==='campo') {
+    document.getElementById('kpi-grid').innerHTML=`
+      <div class="kpi-card kpi-green">
+        <div class="kpi-label">Em Campo Hoje</div>
+        <div class="kpi-value kpi-green">${emCampo.length}</div>
+        <div class="kpi-delta up">↑ Retomada + Vistoria</div>
+        <div class="kpi-sub">Casos ativos no campo</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Vistorias Hoje</div>
+        <div class="kpi-value">${CASES.filter(c=>c.stage==='vistoria').length}</div>
+        <div class="kpi-delta">Aguardando laudo</div>
+        <div class="kpi-sub">Pátio</div>
+      </div>
+      <div class="kpi-card kpi-cyan">
+        <div class="kpi-label">Msgs Blip</div>
+        <div class="kpi-value kpi-cyan">23</div>
+        <div class="kpi-delta up">↑ 3 não lidas</div>
+        <div class="kpi-sub">Conversas ativas</div>
+      </div>
+      <div class="kpi-card kpi-red">
+        <div class="kpi-label">🔴 Urgentes</div>
+        <div class="kpi-value kpi-red">${urgentes.length}</div>
+        <div class="kpi-delta">Alta prioridade</div>
+        <div class="kpi-sub">Ação imediata</div>
+      </div>`;
+  } else if(role==='analista') {
+    const filaAprovacao = CASES.filter(c=>c.prioridade==='alta'&&c.stage==='sanitizacao');
+    document.getElementById('kpi-grid').innerHTML=`
+      <div class="kpi-card kpi-purple" style="--kpi-color:#7C4DFF">
+        <div class="kpi-label">Meus Casos</div>
+        <div class="kpi-value" style="color:#7C4DFF">${meusCasos.length}</div>
+        <div class="kpi-delta up">↑ Portfólio pessoal</div>
+        <div class="kpi-sub">Atribuídos a você</div>
+      </div>
+      <div class="kpi-card kpi-amber">
+        <div class="kpi-label">Fila de Aprovação</div>
+        <div class="kpi-value kpi-amber">${filaAprovacao.length + 3}</div>
+        <div class="kpi-delta">Aguardando sua ação</div>
+        <div class="kpi-sub">Exceções dos agentes</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Alertas SLA</div>
+        <div class="kpi-value kpi-red">${CASES.filter(c=>c.prioridade==='alta').length}</div>
+        <div class="kpi-delta danger">↑ SLA em risco</div>
+        <div class="kpi-sub">Alta prioridade</div>
+      </div>
+      <div class="kpi-card kpi-cyan">
+        <div class="kpi-label">Msgs Blip</div>
+        <div class="kpi-value kpi-cyan">847</div>
+        <div class="kpi-delta up">↑ 94% resposta</div>
+        <div class="kpi-sub">Hoje</div>
+      </div>`;
+  } else if(role==='leiloeiro') {
+    document.getElementById('kpi-grid').innerHTML=`
+      <div class="kpi-card kpi-amber">
+        <div class="kpi-label">Lotes Disponíveis</div>
+        <div class="kpi-value kpi-amber">${emLeilaoFull.length}</div>
+        <div class="kpi-delta up">↑ Para lance</div>
+        <div class="kpi-sub">Portfólio do banco</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Em Leilão Aberto</div>
+        <div class="kpi-value">${CASES.filter(c=>c.stage==='leilao').length}</div>
+        <div class="kpi-delta">Aguardando lance</div>
+        <div class="kpi-sub">Aceitar lote</div>
+      </div>
+      <div class="kpi-card kpi-green">
+        <div class="kpi-label">Melhor Lance</div>
+        <div class="kpi-value kpi-green">R$ 86k</div>
+        <div class="kpi-delta up">↑ Acima do mínimo</div>
+        <div class="kpi-sub">Jeep Compass</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Comissão Est.</div>
+        <div class="kpi-value">R$ 12k</div>
+        <div class="kpi-delta">Este mês</div>
+        <div class="kpi-sub">Baseado em 5% lance</div>
+      </div>`;
+  } else {
+    // Gestor — full KPIs (original)
+    document.getElementById('kpi-grid').innerHTML=`
     <div class="kpi-card kpi-cyan">
       <div class="kpi-label">Total de Casos</div>
       <div class="kpi-value kpi-cyan">${total}</div>
@@ -1961,7 +2287,9 @@ function getFilteredCases(){
   if(portfolioFilterStage!=='all') cases=cases.filter(c=>c.stage===portfolioFilterStage);
   if(portfolioFilterPriority) cases=cases.filter(c=>c.prioridade==='alta');
   return cases;
-  renderBlipDashStrip();
+  } // end role kpis
+    renderBlipDashStrip();
+  renderAnalistaQueue();
 }
 
 function renderPortfolio(){
@@ -2290,7 +2618,7 @@ function renderPanelVisao(c){
       <div class="info-section-title">Informações do Devedor</div>
       <div class="info-grid">
         <div class="info-item"><div class="info-item-label">Nome</div><div class="info-item-value">${c.devedor.nome}</div></div>
-        <div class="info-item"><div class="info-item-label">CPF</div><div class="info-item-value mono">${c.devedor.cpf}</div></div>
+        <div class="info-item"><div class="info-item-label">CPF</div><div class="info-item-value mono">${(ROLE_CONFIG[STATE.role]||ROLE_CONFIG.gestor).canViewDebtorCPF ? c.devedor.cpf : '•••.•••.•••-••'}</div></div>
         <div class="info-item"><div class="info-item-label">Telefone</div><div class="info-item-value mono">${c.devedor.tel}</div></div>
         <div class="info-item"><div class="info-item-label">Estado</div><div class="info-item-value">${c.estado}</div></div>
       </div>
