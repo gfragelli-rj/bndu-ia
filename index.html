@@ -639,6 +639,9 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .exec-agent-card.active{border-color:var(--cyan);background:rgba(0,196,232,.06);}
 .exec-agent-card.running{background:rgba(0,196,232,.04);}
 .exec-agent-card.done{background:rgba(6,214,160,.04);}
+.exec-agent-card.prev-done{background:var(--bg2);opacity:.6;}
+.exec-agent-card.prev-done .exec-agent-name{color:var(--text2);}
+.exec-agent-card.prev-done .exec-agent-impact{color:var(--text3);font-size:10px;font-style:italic;}
 .exec-agent-card-inner{display:flex;align-items:center;gap:9px;}
 .exec-agent-icon{font-size:22px;line-height:1;}
 .exec-agent-info{flex:1;min-width:0;}
@@ -658,6 +661,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .pipeline-node.sm{width:28px;height:28px;}
 .pipeline-node.lg{width:34px;height:34px;font-size:16px;box-shadow:0 0 12px rgba(0,196,232,.2);}
 .pipeline-node.done{border-color:var(--green);background:rgba(6,214,160,.12);}
+.pipeline-node.prev-done{border-color:var(--text3);background:var(--bg3);opacity:.5;border-style:dashed;}
 .pipeline-node.running{border-color:var(--cyan);background:rgba(0,196,232,.15);}
 .pipeline-link{width:16px;height:2px;background:var(--border);transition:background .4s;flex-shrink:0;}
 .pipeline-link.active{background:var(--green);}
@@ -2493,10 +2497,7 @@ function renderPanelActions(c){
     btns+=`<button class="action-btn action-btn-primary" style="background:linear-gradient(135deg,var(--green),var(--green2));color:#000;" onclick="completeCase('${c.id}')">✅ Concluir Processo</button>`;
   }
   btns+=`<button class="blip-shortcut-btn full" onclick="openBlipForCase('${c.id}',event)">💬 Abrir Blip Hub — Conversas deste Caso</button>`;
-  btns+=`<div class="action-btn-row">
-    <button class="action-btn action-btn-secondary" onclick="goToAgentsForCase('${c.id}')">🤖 Ver Agentes</button>
-    <button class="action-btn action-btn-secondary" onclick="showToast('info','📋 Relatório do caso exportado')">📄 Exportar</button>
-  </div>`;
+  btns+=`<button class="action-btn action-btn-secondary" onclick="showToast('info','📋 Relatório do caso exportado')">📄 Exportar Relatório</button>`;
   if(['inadimplencia','negociacao'].includes(c.stage)){
     btns+=`<button class="action-btn action-btn-danger" onclick="escalateCase('${c.id}')">⚡ Escalar para Execução Imediata</button>`;
   }
@@ -2545,7 +2546,28 @@ function askAgentAboutCase(id){
 // ══════════════════════════════════════
 //  AI AGENTS — EXECUTION DEMO
 // ══════════════════════════════════════
-let execState = {mode:'pipeline',running:false,pipelineDone:false,selectedAgent:'legal',activeAgent:null,agentStates:{},completedTasks:{},outputs:{},globalLog:[],elapsedDays:0,aborted:false,caseId:null};
+let execState = {mode:'pipeline',running:false,pipelineDone:false,selectedAgent:'legal',activeAgent:null,agentStates:{},completedTasks:{},outputs:{},globalLog:[],elapsedDays:0,aborted:false,caseId:null,previouslyDone:{}};
+
+// Maps each case stage to the agent that starts execution from there
+const STAGE_TO_AGENT = {
+  'inadimplencia':'legal','negociacao':'legal','execucao':'legal',
+  'retomada':'logistics','vistoria':'compliance','sanitizacao':'tax',
+  'avaliacao':'pricing','leilao':'auction','baixa':'document'
+};
+
+function getAgentsForCase(caseObj){
+  if(!caseObj) return PIPELINE_ORDER.slice();
+  const startAgent=STAGE_TO_AGENT[caseObj.stage]||PIPELINE_ORDER[0];
+  const startIdx=PIPELINE_ORDER.indexOf(startAgent);
+  return startIdx>=0?PIPELINE_ORDER.slice(startIdx):PIPELINE_ORDER.slice();
+}
+
+function getCompletedAgentsForCase(caseObj){
+  if(!caseObj) return [];
+  const startAgent=STAGE_TO_AGENT[caseObj.stage]||PIPELINE_ORDER[0];
+  const startIdx=PIPELINE_ORDER.indexOf(startAgent);
+  return startIdx>0?PIPELINE_ORDER.slice(0,startIdx):[];
+}
 
 function getExecCase(){
   if(!execState.caseId) return null;
@@ -2554,14 +2576,16 @@ function getExecCase(){
 
 function launchPipelineForCase(caseId){
   execState.caseId=caseId;
+  const c=CASES.find(x=>x.id===caseId);
   execState.running=false;
   execState.pipelineDone=false;
   execState.elapsedDays=0;
   execState.outputs={};
   execState.globalLog=[];
-  execState.selectedAgent='legal';
+  execState.selectedAgent=c?(STAGE_TO_AGENT[c.stage]||'legal'):'legal';
   execState.activeAgent=null;
   execState.aborted=false;
+  execState.previouslyDone={};
   AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
   closePanel();
   navigate('agents');
@@ -2570,15 +2594,25 @@ function launchPipelineForCase(caseId){
 
 function goToAgentsForCase(caseId){
   execState.caseId=caseId;
+  const c=CASES.find(x=>x.id===caseId);
   execState.running=false;
   execState.pipelineDone=false;
   execState.elapsedDays=0;
   execState.outputs={};
   execState.globalLog=[];
-  execState.selectedAgent='legal';
+  execState.selectedAgent=c?(STAGE_TO_AGENT[c.stage]||'legal'):'legal';
   execState.activeAgent=null;
   execState.aborted=false;
+  execState.previouslyDone={};
   AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
+  // Pre-mark already-completed agents as done (visually only, no outputs yet)
+  if(c){
+    const completedBefore=getCompletedAgentsForCase(c);
+    completedBefore.forEach(aid=>{
+      const a=AGENTS_DEF.find(x=>x.id===aid);
+      if(a){execState.agentStates[aid]='done';execState.completedTasks[aid]=a.execTasks.length;execState.previouslyDone[aid]=true;}
+    });
+  }
   closePanel();
   navigate('agents');
   setTimeout(()=>renderAgents(),200);
@@ -2613,11 +2647,12 @@ function renderExecList(){
     const st=execState.agentStates[a.id];
     const pct=a.execTasks?((execState.completedTasks[a.id]||0)/a.execTasks.length*100):0;
     const isActive=execState.selectedAgent===a.id;
-    return `<div class="exec-agent-card ${isActive?'active':''} ${st}" onclick="execSelectAgent('${a.id}')" style="${st==='running'?'border-color:'+(a.accent||'var(--cyan)'):st==='done'?'border-color:var(--green)':''}">
+    const isPrev=execState.previouslyDone[a.id];
+    return `<div class="exec-agent-card ${isActive?'active':''} ${st} ${isPrev?'prev-done':''}" onclick="execSelectAgent('${a.id}')" style="${st==='running'?'border-color:'+(a.accent||'var(--cyan)'):st==='done'&&!isPrev?'border-color:var(--green)':''}">
       <div class="exec-agent-card-inner">
-        <div class="exec-agent-icon">${a.icon}</div>
-        <div class="exec-agent-info"><div class="exec-agent-name">${a.name}</div><div class="exec-agent-impact">${a.impact||''}</div></div>
-        <div class="exec-agent-dot ${st}"></div>
+        <div class="exec-agent-icon" style="${isPrev?'opacity:.55':''}">${a.icon}</div>
+        <div class="exec-agent-info"><div class="exec-agent-name">${a.name}</div><div class="exec-agent-impact">${isPrev?'⏪ Concluído anteriormente':a.impact||''}</div></div>
+        <div class="exec-agent-dot ${st}" style="${isPrev?'background:var(--text3)!important;box-shadow:none!important;animation:none!important':''}"></div>
       </div>
       ${st==='running'?`<div class="exec-agent-progress" style="width:${pct}%;background:${a.accent||'var(--cyan)'}"></div>`:''}
     </div>`;
@@ -2631,10 +2666,11 @@ function renderExecPipeline(){
     const a=AGENTS_DEF.find(x=>x.id===id);
     const st=execState.agentStates[id];
     const isAct=execState.activeAgent===id;
+    const isPrev=execState.previouslyDone[id];
     const cls=isAct?'lg':'sm';
-    const stCls=st==='done'?'done':st==='running'?'running':'';
+    const stCls=isPrev?'prev-done':st==='done'?'done':st==='running'?'running':'';
     const link=i<PIPELINE_ORDER.length-1?`<div class="pipeline-link ${execState.agentStates[PIPELINE_ORDER[i+1]]!=='idle'?'active':''}"></div>`:'';
-    return `<div class="pipeline-node ${cls} ${stCls}" title="${a?.name}">${a?.icon}</div>${link}`;
+    return `<div class="pipeline-node ${cls} ${stCls}" title="${a?.name}${isPrev?' (concluído anteriormente)':''}">${a?.icon}</div>${link}`;
   }).join('');
 }
 
@@ -2683,7 +2719,7 @@ function renderExecTaskPanel(){
   }
 
   const pillCls=st==='running'?'running':st==='done'?'done':'idle';
-  const pillText=st==='running'?'Executando':st==='done'?'Concluído':st==='waiting'?'Aguardando':'Idle';
+  const pillText=execState.previouslyDone[a.id]?'Anterior':st==='running'?'Executando':st==='done'?'Concluído':st==='waiting'?'Aguardando':'Idle';
 
   let actionBtn='';
   if(execState.mode==='single' && !execState.running && st==='idle' && getExecCase()){
@@ -2692,12 +2728,20 @@ function renderExecTaskPanel(){
     actionBtn=`<button class="exec-run-agent-btn" onclick="navigate('portfolio')" style="border-color:var(--amber);color:var(--amber)">📋 Selecionar um caso no Portfólio</button>`;
   }
 
+  let prevBanner='';
+  if(execState.previouslyDone[a.id]){
+    const ec=getExecCase();
+    const stage=ec?(STAGES.find(s=>s.id===ec.stage)||{}):{};
+    prevBanner=`<div style="background:rgba(85,105,128,.12);border:1px dashed var(--text3);border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;gap:10px;align-items:flex-start"><span style="font-size:18px">⏪</span><div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--text2)">Já executado em fase anterior</div><div style="font-size:11px;color:var(--text3);margin-top:2px;line-height:1.4">Este agente já completou suas tarefas. O caso atualmente está em <strong style="color:var(--text2)">${stage.label||'—'}</strong>, então o pipeline retoma a partir do agente correspondente.</div></div></div>`;
+  }
+
   el.innerHTML=`
     <div class="exec-task-header">
       <div class="exec-task-icon">${a.icon}</div>
       <div><div class="exec-task-title">${a.name}</div><div class="exec-task-subtitle" style="color:${accentColor}">${a.subtitle||''}</div></div>
       <div class="exec-task-pill ${pillCls}" style="${st==='running'?'border-color:'+accentColor+';color:'+accentColor:''}">${pillText}</div>
     </div>
+    ${prevBanner}
     <div class="exec-task-meta">
       <div class="exec-task-meta-item"><div class="exec-task-meta-label">Trigger</div><div class="exec-task-meta-value">${a.trigger||'—'}</div></div>
       <div class="exec-task-meta-item"><div class="exec-task-meta-label">Stakeholder</div><div class="exec-task-meta-value">${a.stakeholder||'—'}</div></div>
@@ -2843,17 +2887,66 @@ async function execRunPipeline(){
   execState.elapsedDays=0;
   execState.outputs={};
   execState.globalLog=[];
+  execState.previouslyDone={};
   AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
+
+  const ec=getExecCase();
+  const agentsToRun=getAgentsForCase(ec);
+  const completedBefore=getCompletedAgentsForCase(ec);
+  const currentStage=ec?(STAGES.find(s=>s.id===ec.stage)||{}):{};
+
+  // Pre-mark agents that already executed in previous stages
+  completedBefore.forEach(aid=>{
+    const a=AGENTS_DEF.find(x=>x.id===aid);
+    if(!a) return;
+    execState.agentStates[aid]='done';
+    execState.completedTasks[aid]=a.execTasks.length;
+    execState.previouslyDone[aid]=true;
+    // Build enriched output for already-done agents too
+    let agentOutput=Object.assign({},a.output);
+    if(ec){
+      if(aid==='legal') agentOutput.processo=`${ec.contrato} — ${ec.estado}`;
+      if(aid==='compliance') agentOutput.chassi=ec.veiculo.chassi;
+      if(aid==='tax'){
+        const td=ec.debitos.ipva+ec.debitos.multas+ec.debitos.taxas;
+        agentOutput.totalDebitos=fmtCurrency(td);
+        agentOutput.ipva=fmtCurrency(ec.debitos.ipva);
+        agentOutput.multas=fmtCurrency(ec.debitos.multas);
+      }
+      if(aid==='pricing'){
+        agentOutput.fipe=fmtCurrency(ec.fipe);
+        const reserva=Math.round(ec.fipe*0.8);
+        agentOutput.precoReserva=fmtCurrency(reserva);
+      }
+    }
+    execState.outputs[aid]=agentOutput;
+  });
+
   renderExecActions();renderExecList();renderExecPipeline();renderExecKPIs();renderExecLog();
 
-  execAddLog('🚀 Pipeline BNDU.ia iniciado — Ciclo completo de recuperação',null);
-  const pCase=getExecCase();
-  if(pCase) execAddLog(`🚗 ${pCase.id} — ${pCase.veiculo.marca} ${pCase.veiculo.modelo} — ${pCase.veiculo.placa}`,null);
-  else execAddLog('🚗 Veículo de demonstração',null);
+  execAddLog('🚀 Pipeline BNDU.ia iniciado',null);
+  if(ec){
+    execAddLog(`🚗 ${ec.id} — ${ec.veiculo.marca} ${ec.veiculo.modelo} — ${ec.veiculo.placa}`,null);
+    execAddLog(`📍 Fase atual: ${currentStage.label||ec.stage} (${currentStage.day||'—'})`,null);
+    if(completedBefore.length>0){
+      const names=completedBefore.map(aid=>AGENTS_DEF.find(x=>x.id===aid)?.name).join(', ');
+      execAddLog(`⏪ Etapas anteriores já executadas: ${names}`,null);
+    }
+    if(agentsToRun.length===0){
+      execAddLog('✅ Caso já completou todas as fases — nada a executar',null);
+      execState.pipelineDone=true;
+      execState.running=false;
+      renderExecActions();renderExecPipeline();renderExecKPIs();
+      return;
+    }
+    execAddLog(`▶ Retomando pipeline a partir de: ${AGENTS_DEF.find(x=>x.id===agentsToRun[0])?.name}`,null);
+  } else {
+    execAddLog('🚗 Veículo de demonstração',null);
+  }
 
-  for(const agentId of PIPELINE_ORDER){
+  for(const agentId of agentsToRun){
     if(execState.aborted) break;
-    if(agentId!==PIPELINE_ORDER[0]){
+    if(agentId!==agentsToRun[0]){
       execState.agentStates[agentId]='waiting';
       renderExecList();renderExecPipeline();
       await execSleep(500);
@@ -2865,10 +2958,10 @@ async function execRunPipeline(){
   if(!execState.aborted){
     const doneCase=getExecCase();
     if(doneCase){
-      doneCase.historico.push({data:new Date().toISOString().split('T')[0],texto:`Pipeline BNDU.ia completo — ${execState.elapsedDays} dias economizados. Veículo vendido e caso encerrado.`,agente:'Supervisor Agent'});
-      execAddLog(`🏁 Pipeline completo — ${doneCase.id} ${doneCase.veiculo.marca} ${doneCase.veiculo.modelo} vendido e encerrado!`,null);
+      doneCase.historico.push({data:new Date().toISOString().split('T')[0],texto:`Pipeline BNDU.ia executado a partir de ${currentStage.label||doneCase.stage} — ${execState.elapsedDays} dias economizados.`,agente:'Supervisor Agent'});
+      execAddLog(`🏁 Pipeline completo — ${doneCase.id} ${doneCase.veiculo.marca} ${doneCase.veiculo.modelo} encerrado!`,null);
     } else {
-      execAddLog('🏁 Pipeline completo — Veículo vendido e caso encerrado!',null);
+      execAddLog('🏁 Pipeline completo!',null);
     }
     execState.pipelineDone=true;
   }
@@ -2884,6 +2977,7 @@ async function execRunSingle(agentId){
   execState.globalLog=[];
   execState.elapsedDays=0;
   execState.outputs={};
+  execState.previouslyDone={};
   AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
   renderExecActions();renderExecList();renderExecPipeline();renderExecKPIs();renderExecLog();
 
