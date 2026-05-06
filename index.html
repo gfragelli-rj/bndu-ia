@@ -20,9 +20,9 @@ const BH_CHATS = {
     unread:2, preview:'📍 Chegando no endereço — 8 min', time:'14:32',
     msgs:[
       {type:'event', text:'Logistics Agent acionou Reboque Rápido SP #47 — BND-001 — HB20 FMC-3847'},
-      {out:true, sender:'📍 Logistics Agent via Blip', time:'14:05', text:'🚛 *Ordem de Serviço #OS-2847*\n\nOlá! Sou o assistente do Banco BV. Temos uma apreensão prioritária:', card:{title:'📋 OS-2847 — Busca e Apreensão', rows:[['Veículo','HB20 Sense 2021 — Cinza'],['Placa','FMC-3847'],['Endereço','Rua das Flores, 142 — Guarulhos'],['Prazo','Hoje até 17h'],['Prioridade','🔴 Alta']]}, actions:['✅ Confirmar OS','❌ Recusar']},
+      {out:true, sender:'📍 Logistics Agent via Hub', time:'14:05', text:'🚛 *Ordem de Serviço #OS-2847*\n\nOlá! Sou o assistente do Banco BV. Temos uma apreensão prioritária:', card:{title:'📋 OS-2847 — Busca e Apreensão', rows:[['Veículo','HB20 Sense 2021 — Cinza'],['Placa','FMC-3847'],['Endereço','Rua das Flores, 142 — Guarulhos'],['Prazo','Hoje até 17h'],['Prioridade','🔴 Alta']]}, actions:['✅ Confirmar OS','❌ Recusar']},
       {in:true, time:'14:07', text:'✅ OS confirmada. Saindo agora. ETA 25 minutos.'},
-      {out:true, sender:'📍 Logistics Agent via Blip', time:'14:07', text:'Ótimo! Por favor envie sua localização quando chegar ao endereço. 📍'},
+      {out:true, sender:'📍 Logistics Agent via Hub', time:'14:07', text:'Ótimo! Por favor envie sua localização quando chegar ao endereço. 📍'},
       {in:true, time:'14:19', text:'📍 Localização enviada — estou a 2 quarteirões'},
       {in:true, time:'14:32', text:'📍 Chegando no endereço — 8 minutos\n\n*Situação:* Veículo visível na garagem ✅'},
       {type:'typing'}
@@ -35,20 +35,20 @@ const BH_CHATS = {
     unread:1, preview:'Aprovação necessária — reserva leilão', time:'14:28',
     msgs:[
       {type:'event', text:'Supervisor Agent escalou BND-007 para aprovação humana — preço de reserva 18% abaixo do limite'},
-      {out:true, sender:'🧠 Supervisor Agent via Blip', time:'14:25', text:'⚠️ *Aprovação Necessária — Preço de Reserva*\n\nRafael, o Auction Agent calculou preço de reserva abaixo do limite mínimo configurado. Preciso de sua aprovação:', card:{title:'🔨 Lote BND-007 — Onix 2020', rows:[['Veículo','Chevrolet Onix LT 2020'],['FIPE atual','R$ 48.200'],['Reserva calculada','R$ 39.500 (82% FIPE)'],['Débitos saneados','R$ 3.100'],['Resultado líq. proj.','R$ 36.400'],['Leiloeira','Superbid — 18/05']]}, actions:['✅ Aprovar reserva','🔄 Recalcular','❌ Aguardar']},
+      {out:true, sender:'🧠 Supervisor Agent via Hub', time:'14:25', text:'⚠️ *Aprovação Necessária — Preço de Reserva*\n\nRafael, o Auction Agent calculou preço de reserva abaixo do limite mínimo configurado. Preciso de sua aprovação:', card:{title:'🔨 Lote BND-007 — Onix 2020', rows:[['Veículo','Chevrolet Onix LT 2020'],['FIPE atual','R$ 48.200'],['Reserva calculada','R$ 39.500 (82% FIPE)'],['Débitos saneados','R$ 3.100'],['Resultado líq. proj.','R$ 36.400'],['Leiloeira','Superbid — 18/05']]}, actions:['✅ Aprovar reserva','🔄 Recalcular','❌ Aguardar']},
       {type:'typing'}
     ]
   },
   devedor:{
     name:'Carlos E. Silva', avatar:'👤', avatarBg:'rgba(6,214,160,.1)',
-    status:'Online · identificado por CPF', agentTag:'🤖 BNDU Bot · Blip NLU',
+    status:'Online · identificado por CPF', agentTag:'🤖 BNDU Bot · NLU',
     typeTag:'Devedor', typeColor:'rgba(6,214,160,.1)', typeTextColor:'var(--green)',
     unread:0, preview:'Posso negociar a dívida?', time:'14:21',
     msgs:[
       {type:'event', text:'Legal Agent notificou Carlos E. Silva — BND-001 — liminar de busca e apreensão deferida'},
-      {out:true, sender:'🤖 BNDU Bot via Blip', time:'13:55', text:'📋 *Banco BV — Notificação Importante*\n\nOlá, Carlos! Identificamos um contrato de financiamento com débito em aberto (BND-001). Uma liminar de busca e apreensão foi deferida. Como podemos ajudá-lo?'},
+      {out:true, sender:'🤖 BNDU Bot via Hub', time:'13:55', text:'📋 *Banco BV — Notificação Importante*\n\nOlá, Carlos! Identificamos um contrato de financiamento com débito em aberto (BND-001). Uma liminar de busca e apreensão foi deferida. Como podemos ajudá-lo?'},
       {in:true, time:'14:20', text:'Posso negociar a dívida? Quanto preciso pagar?'},
-      {out:true, sender:'🤖 BNDU Bot via Blip', time:'14:20', text:'✅ Sim! Você pode regularizar sua situação.\n\nSeu saldo devedor: *R$ 45.800*.\n\nOpções disponíveis:', card:{title:'💰 Opções de Regularização', rows:[['À vista','R$ 40.304 (12% desc.)'],['3x cartão','R$ 45.800 sem juros'],['Negociação direta','Falar com consultor']]}, actions:['💳 Pagar à vista','📞 Falar com consultor','📋 Ver detalhes']}
+      {out:true, sender:'🤖 BNDU Bot via Hub', time:'14:20', text:'✅ Sim! Você pode regularizar sua situação.\n\nSeu saldo devedor: *R$ 45.800*.\n\nOpções disponíveis:', card:{title:'💰 Opções de Regularização', rows:[['À vista','R$ 40.304 (12% desc.)'],['3x cartão','R$ 45.800 sem juros'],['Negociação direta','Falar com consultor']]}, actions:['💳 Pagar à vista','📞 Falar com consultor','📋 Ver detalhes']}
     ]
   },
   patio:{
@@ -57,11 +57,11 @@ const BH_CHATS = {
     typeTag:'Pátio', typeColor:'rgba(245,166,35,.12)', typeTextColor:'var(--amber)',
     unread:0, preview:'✅ Check-in confirmado — HB20 FMC-3847', time:'14:09',
     msgs:[
-      {out:true, sender:'📍 Logistics Agent via Blip', time:'13:50', text:'🏭 *Aviso de Chegada — Banco BV*\n\nUm veículo será entregue em ~30 minutos. Por favor, prepare a vaga e o checklist de entrada:', card:{title:'🚗 Veículo em Trânsito', rows:[['Placa','FMC-3847'],['Veículo','HB20 Cinza 2021'],['Reboque','Rápido SP #47'],['ETA','~25 min'],['Contrato','BND-001']]}},
+      {out:true, sender:'📍 Logistics Agent via Hub', time:'13:50', text:'🏭 *Aviso de Chegada — Banco BV*\n\nUm veículo será entregue em ~30 minutos. Por favor, prepare a vaga e o checklist de entrada:', card:{title:'🚗 Veículo em Trânsito', rows:[['Placa','FMC-3847'],['Veículo','HB20 Cinza 2021'],['Reboque','Rápido SP #47'],['ETA','~25 min'],['Contrato','BND-001']]}},
       {in:true, time:'13:52', text:'✅ Recebido. Vaga 47-B reservada. Câmera ativada.'},
-      {out:true, sender:'📍 Logistics Agent via Blip', time:'13:52', text:'Perfeito! Quando o veículo chegar, envie:\n\n1️⃣ Foto da frente com placa visível\n2️⃣ Foto lateral direita e esquerda\n3️⃣ Odômetro\n4️⃣ Estado geral (1-5)'},
+      {out:true, sender:'📍 Logistics Agent via Hub', time:'13:52', text:'Perfeito! Quando o veículo chegar, envie:\n\n1️⃣ Foto da frente com placa visível\n2️⃣ Foto lateral direita e esquerda\n3️⃣ Odômetro\n4️⃣ Estado geral (1-5)'},
       {in:true, time:'14:09', text:'✅ Check-in confirmado — HB20 placa FMC-3847\n\n📸 4 fotos enviadas\n📏 Odômetro: 48.320 km\n⭐ Estado: 3/5 (amassado no para-choque)\n📍 Vaga: 47-B'},
-      {out:true, sender:'📍 Logistics Agent via Blip', time:'14:09', text:'✅ Check-in registrado! Asset Profile atualizado automaticamente. Compliance Agent notificado para iniciar vistoria. Obrigado! 🙏'}
+      {out:true, sender:'📍 Logistics Agent via Hub', time:'14:09', text:'✅ Check-in registrado! Asset Profile atualizado automaticamente. Compliance Agent notificado para iniciar vistoria. Obrigado! 🙏'}
     ]
   },
   leiloeira:{
@@ -71,9 +71,9 @@ const BH_CHATS = {
     unread:0, preview:'Lote aceito para 18/05 — confirme', time:'13:55',
     msgs:[
       {type:'event', text:'Auction Agent acionou 3 leiloeiras simultâneas — lote BND-007'},
-      {out:true, sender:'🔨 Auction Agent via Blip', time:'13:48', text:'🔨 *Banco BV — Lote Disponível*\n\nOlá, Superbid! Temos um lote disponível para o seu próximo evento:', card:{title:'🚗 Lote BND-L-0847', rows:[['Veículo','Chevrolet Onix LT 2020'],['Placa','RST-9921'],['Km','52.400'],['Estado geral','4/5'],['Reserva mín.','R$ 39.500'],['Documentação','✅ Regularizada']]}, actions:['✅ Aceitar lote','❌ Sem disponibilidade','📅 Outra data']},
+      {out:true, sender:'🔨 Auction Agent via Hub', time:'13:48', text:'🔨 *Banco BV — Lote Disponível*\n\nOlá, Superbid! Temos um lote disponível para o seu próximo evento:', card:{title:'🚗 Lote BND-L-0847', rows:[['Veículo','Chevrolet Onix LT 2020'],['Placa','RST-9921'],['Km','52.400'],['Estado geral','4/5'],['Reserva mín.','R$ 39.500'],['Documentação','✅ Regularizada']]}, actions:['✅ Aceitar lote','❌ Sem disponibilidade','📅 Outra data']},
       {in:true, time:'13:55', text:'Lote aceito para 18/05 — confirme'},
-      {out:true, sender:'🔨 Auction Agent via Blip', time:'13:55', text:'✅ Confirmado!\n\n*Lote BND-L-0847* reservado para *18/05* às 10h.\n\nVocê receberá laudo completo e fotos em até 2h. 👍'}
+      {out:true, sender:'🔨 Auction Agent via Hub', time:'13:55', text:'✅ Confirmado!\n\n*Lote BND-L-0847* reservado para *18/05* às 10h.\n\nVocê receberá laudo completo e fotos em até 2h. 👍'}
     ]
   }
 };
@@ -236,7 +236,7 @@ function openBlipForCase(caseId, e){
   bhCurrentChat = chatKey;
   navigate('bliphub');  // navigate calls renderBlipHub() via the view===bliphub check
   var labels = {devedor:'Devedor', reboque:'Reboque', patio:'Pátio', leiloeira:'Leiloeira', analista:'Analista'};
-  showToast('info', '💬 Blip Hub — ' + (labels[chatKey]||chatKey) + (c?' · '+c.id:''));
+  showToast('info', '💬 Hub — ' + (labels[chatKey]||chatKey) + (c?' · '+c.id:''));
 }
 
 function openBlipTab(tabKey){
@@ -255,7 +255,7 @@ function renderBlipDashStrip(){
     {key:'leiloeira',ico:'🏷️',name:'Superbid — Lotes',      preview:'Lote aceito para 18/05',       badge:'',         badgeCls:''},
   ];
   var html = '<div class="blip-dash-strip-hdr">'
-    + '<div class="blip-dash-strip-title">💬 Blip Hub — Conversas Ativas</div>'
+    + '<div class="blip-dash-strip-title">💬 Hub — Conversas Ativas</div>'
     + '<div style="display:flex;align-items:center;gap:10px;">'
     + '<div class="blip-dash-strip-live">Ao Vivo · 23 chats</div>'
     + '<button class="blip-shortcut-btn sm" onclick="navigate(&apos;bliphub&apos;)">Ver todos</button>'
@@ -1143,7 +1143,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
           <span class="nav-badge" style="background:var(--amber)">Novo</span>
         </div>
         <div class="nav-item blip-nav" onclick="navigate('bliphub')" id="nav-bliphub">
-          <span class="nav-icon">💬</span><span class="nav-label">Blip Hub</span>
+          <span class="nav-icon">💬</span><span class="nav-label">Hub</span>
           <span class="nav-badge nav-badge-live">ao vivo</span>
         </div>
         <div class="nav-item" onclick="navigate('relatorios')" id="nav-relatorios">
@@ -1172,7 +1172,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
   <!-- MAIN AREA -->
   <div class="main-area">
     <!-- HEADER -->
-    <div class="campo-bar" id="campo-bar"><span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--green)">⚡ BNDU.ia</span><div class="campo-bar-nav"><button class="campo-bar-btn active" onclick="campoNav('retomada',this)">🚛 Retomada</button><button class="campo-bar-btn" onclick="campoNav('vistoria',this)">🔍 Vistoria</button><button class="campo-bar-btn" onclick="campoNav('bliphub',this)">💬 Blip</button></div><span id="campo-user" style="font-size:11px;color:var(--text3);margin-left:auto"></span></div><div class="header">
+    <div class="campo-bar" id="campo-bar"><span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--green)">⚡ BNDU.ia</span><div class="campo-bar-nav"><button class="campo-bar-btn active" onclick="campoNav('retomada',this)">🚛 Retomada</button><button class="campo-bar-btn" onclick="campoNav('vistoria',this)">🔍 Vistoria</button><button class="campo-bar-btn" onclick="campoNav('bliphub',this)">💬 Hub</button></div><span id="campo-user" style="font-size:11px;color:var(--text3);margin-left:auto"></span></div><div class="header">
       <div class="header-title" id="header-title">Dashboard <span id="header-sub">Visão geral do portfólio BNDU</span></div>
       <div class="header-search">
         <span class="header-search-icon">🔍</span>
@@ -1271,7 +1271,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
           <div class="blip-hub-top">
             <div class="blip-logo-box">💬</div>
             <div>
-              <div class="blip-hub-title">Blip Hub — Central de Conversas BNDU</div>
+              <div class="blip-hub-title">Hub — Central de Conversas BNDU</div>
               <div class="blip-hub-sub">WhatsApp Business API · Meta BSP Oficial · NLU + IA Generativa · 25B+ msgs · 150M+ usuários</div>
             </div>
             <div class="blip-live-pill">Ao Vivo</div>
@@ -1820,8 +1820,8 @@ function doLogin(){
   });
 
   setTimeout(()=>showToast('info','🤖 Supervisor Agent: 3 casos precisam de atenção hoje'),3500);
-  setTimeout(()=>showToast('success','💬 Blip Hub: Reboque SP #47 confirmou OS — ETA 25min'),6000);
-  setTimeout(()=>showToast('info','💬 Blip Hub: Analista, aprovação necessária — reserva leilão BND-007'),10000);
+  setTimeout(()=>showToast('success','💬 Hub: Reboque SP #47 confirmou OS — ETA 25min'),6000);
+  setTimeout(()=>showToast('info','💬 Hub: Analista, aprovação necessária — reserva leilão BND-007'),10000);
 }
 
 // ══════════════════════════════════════
@@ -1849,7 +1849,7 @@ function navigate(view){
     relatorios:['Relatórios','Analytics e KPIs avançados'],
     integracoes:['Integrações','Status das conexões com sistemas externos'],
     configuracoes:['Configurações','Preferências e configurações da plataforma'],
-    bliphub:['💬 Blip Hub','Central de conversas — WhatsApp Business API · NLU · IA Generativa'],
+    bliphub:['💬 Hub','Central de conversas — WhatsApp Business API · NLU · IA Generativa'],
     vin360:['🚗 VIN 360','Perfil Unificado do Veículo — 7 dimensões em tempo real']
   };
   const t=titles[view]||['BNDU.ia',''];
@@ -2210,9 +2210,6 @@ function renderVin360Card(c) {
         <div class="vin360-completude">VIN · Perfil ${v.completude}% completo</div>
       </div>
       <div style="flex:1">${completBar}</div>
-      <button class="blip-shortcut-btn sm" onclick="navigate('vin360');document.getElementById('vin360-selector').value='${c.id}';renderVin360Explorer()">
-        🔍 Explorador VIN 360
-      </button>
     </div>
     <div class="vin360-grid">
       ${dim('🆔','Identificação','Veículo',v.identificacao.vin?'var(--cyan)':'var(--text3)',[
@@ -2267,7 +2264,7 @@ function renderVin360Card(c) {
       <div class="vin360-dim" style="grid-column:1/-1">
         <div class="vin360-dim-hdr">
           <div class="vin360-dim-icon">💬</div>
-          <div class="vin360-dim-title">Conversacional · Blip Hub</div>
+          <div class="vin360-dim-title">Conversacional · Hub</div>
           <div class="vin360-dim-badge" style="background:${v.conversacional.evidenciaJuridica?'var(--green)':'var(--text3)'}22;color:${v.conversacional.evidenciaJuridica?'var(--green)':'var(--text3)'}">
             ${v.conversacional.evidenciaJuridica?'✅ Evidência jurídica':'Sem evidência'}
           </div>
@@ -2449,7 +2446,7 @@ function renderPanelActions(c){
   } else {
     btns+=`<button class="action-btn action-btn-primary" style="background:linear-gradient(135deg,var(--green),var(--green2));color:#000;" onclick="completeCase('${c.id}')">✅ Concluir Processo</button>`;
   }
-  btns+=`<button class="blip-shortcut-btn full" onclick="openBlipForCase('${c.id}',event)">💬 Abrir Blip Hub — Conversas deste Caso</button>`;
+  btns+=`<button class="blip-shortcut-btn full" onclick="openBlipForCase('${c.id}',event)">💬 Abrir Hub — Conversas deste Caso</button>`;
   btns+=`<button class="action-btn action-btn-secondary" onclick="showToast('info','📋 Relatório do caso exportado')">📄 Exportar Relatório</button>`;
   if(['inadimplencia','negociacao'].includes(c.stage)){
     btns+=`<button class="action-btn action-btn-danger" onclick="escalateCase('${c.id}')">⚡ Escalar para Execução Imediata</button>`;
@@ -2973,7 +2970,7 @@ function renderIntegracoes(){
       <div class="int-header">
         <span class="int-icon" style="font-size:28px">💬</span>
         <div>
-          <div class="int-name">Blip — Plataforma Conversacional <span class="badge badge-cyan" style="font-size:10px;margin-left:8px">Hub Central</span></div>
+          <div class="int-name">Hub Conversacional <span class="badge badge-cyan" style="font-size:10px;margin-left:8px">WhatsApp BSP</span></div>
           <div class="int-type">WhatsApp Business API · NLU · IA Generativa · Meta BSP Oficial · 25B+ mensagens · 150M+ usuários</div>
         </div>
         <div class="int-status online" style="font-size:12px">● Conectado · Ao Vivo</div>
@@ -2995,7 +2992,7 @@ function renderIntegracoes(){
         <span class="blip-int-channel">📊 Analytics real-time</span>
         <span class="blip-int-channel">🔒 LGPD compliant</span>
       </div>
-      <button class="int-btn" style="margin-top:10px;border-color:rgba(0,196,232,.3);color:var(--cyan)" onclick="navigate('bliphub')">💬 Abrir Blip Hub</button>
+      <button class="int-btn" style="margin-top:10px;border-color:rgba(0,196,232,.3);color:var(--cyan)" onclick="navigate('bliphub')">💬 Abrir Hub</button>
     </div>`;
   document.getElementById('integrations-grid').innerHTML=blipCard+integrations.map(i=>`
     <div class="integration-card">
@@ -3149,7 +3146,7 @@ setInterval(()=>{
 const ROLE_CONFIG = {
   gestor:   {
     color:'var(--cyan)', label:'Gestora',
-    nav:['dashboard','portfolio','leilao','vin360','agents','bliphub','relatorios','integracoes','configuracoes'],
+    nav:['dashboard','portfolio','vin360','agents','bliphub','relatorios','integracoes','configuracoes'],
     defaultView:'dashboard', hideCPF:false, approver:true
   },
   analista: {
@@ -3297,14 +3294,14 @@ function renderRoleKPIs() {
       kpi('Em Campo',    campo.length,       'var(--green)', '↑ Retomada + Vistoria', 'Casos ativos') +
       kpi('Vistoria',   CASES.filter(c=>c.stage==='vistoria').length, 'var(--cyan)', 'Aguard. laudo', 'Pátio') +
       kpi('Urgentes',   CASES.filter(c=>c.prioridade==='alta'&&campo.find(x=>x.id===c.id)).length, 'var(--red)', 'Alta prioridade', 'Ação imediata') +
-      kpi('Blip msgs',  '23',               'var(--cyan)',  '3 não lidas', 'Conversas ativas');
+      kpi('Hub msgs',  '23',               'var(--cyan)',  '3 não lidas', 'Conversas ativas');
   } else if (role === 'analista') {
     const meus = CASES.filter(c => c.responsavel === ROLE_NAMES[role]).length;
     grid.innerHTML =
       kpi('Meus casos',  meus,     '#7C4DFF', '↑ Portfólio pessoal', 'Atribuídos a você') +
       kpi('Aprovações',  '3',      'var(--amber)', 'Aguardando você', 'Fila de aprovação') +
       kpi('Alertas SLA', alta,     'var(--red)',   '↑ SLA em risco',  'Alta prioridade') +
-      kpi('Blip msgs',   '847',    'var(--cyan)',  '94% resposta',    'Hoje');
+      kpi('Hub msgs',   '847',    'var(--cyan)',  '94% resposta',    'Hoje');
   } else if (role === 'leiloeiro') {
     grid.innerHTML =
       kpi('Lotes disp.',  leil.length,  'var(--amber)', '↑ Para lance',   'Portfólio banco') +
