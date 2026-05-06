@@ -649,6 +649,13 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .exec-agent-dot.done{background:var(--green);}
 .exec-agent-dot.waiting{background:var(--amber);animation:pulse 1s infinite;}
 .exec-agent-dot.idle{background:var(--text3);}
+.exec-agent-dot.monitoring{background:#d946ef;box-shadow:0 0 8px rgba(217,70,239,.5);animation:pulse-monitoring 2.5s ease-in-out infinite;}
+@keyframes pulse-monitoring{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.2)}}
+.exec-agent-card.is-supervisor{background:rgba(217,70,239,.04);border-color:rgba(217,70,239,.18)!important;}
+.exec-agent-card.is-supervisor.running{background:rgba(217,70,239,.1)!important;border-color:#d946ef!important;}
+.exec-agent-card.is-supervisor .exec-agent-impact{color:#d946ef;}
+.exec-agents-divider{display:flex;align-items:center;gap:8px;margin:12px 0 6px;font-size:9.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;}
+.exec-agents-divider::before,.exec-agents-divider::after{content:'';flex:1;height:1px;background:var(--border);}
 .exec-agent-progress{position:absolute;bottom:0;left:0;height:2.5px;background:var(--cyan);transition:width .4s ease;border-radius:0 2px 0 0;}
 
 .agents-exec-center{flex:1;display:flex;flex-direction:column;overflow:hidden;}
@@ -1486,6 +1493,38 @@ const AGENT_TO_NEXT_STAGE = {
   document:   'baixa'         // Document concludes the case at baixa
 };
 
+// Supervisor Agent intervention scenarios — each agent has possible anomalies the Supervisor catches
+const SUPERVISOR_SCENARIOS = {
+  legal: [
+    {severity:'low',    anomaly:'PJe instabilidade detectada — timeout na consulta de despachos', resolution:'re-tentativa automática bem-sucedida (3ª tentativa)'},
+    {severity:'medium', anomaly:'Liminar com texto ambíguo — confiança NLP abaixo de 75%',          resolution:'escalada para revisão jurídica via Hub'}
+  ],
+  logistics: [
+    {severity:'low',    anomaly:'Reboque selecionado atrasou ETA em >4h',                            resolution:'parceiro backup TransLog SP-2 acionado automaticamente'},
+    {severity:'medium', anomaly:'GPS perdeu sinal por 15min em rota crítica',                        resolution:'confirmação manual com motorista solicitada via Hub'}
+  ],
+  compliance: [
+    {severity:'low',    anomaly:'OCR com baixa confiança (78%) na leitura do chassi',                resolution:'2ª foto solicitada ao pátio via Hub — chassi validado'},
+    {severity:'low',    anomaly:'Divergência menor no laudo (1 item) sem impacto material',          resolution:'tolerância aplicada conforme guardrails — caso liberado'}
+  ],
+  tax: [
+    {severity:'low',    anomaly:'Detran-MG com lag de 6h — débito aparece como pendente',            resolution:'re-consulta confirma quitação — guardrails atualizados'},
+    {severity:'medium', anomaly:'Renajud demorou >48h para baixa de restrição',                      resolution:'caso escalado para tributário via Hub (Rafael Torres notificado)'}
+  ],
+  pricing: [
+    {severity:'high',   anomaly:'Preço de reserva calculado 18% abaixo do limite mínimo',            resolution:'aprovação humana solicitada via Hub — analista Rafael notificado'},
+    {severity:'low',    anomaly:'Variação FIPE atípica detectada (-7% em 30 dias)',                  resolution:'fator sazonalidade ajustado — preço re-calculado automaticamente'}
+  ],
+  auction: [
+    {severity:'medium', anomaly:'Lance final ficou 12% abaixo da reserva configurada',               resolution:'lote re-publicado em 2 leiloeiras adicionais (Sodré + Copart)'},
+    {severity:'low',    anomaly:'Apenas 1 leiloeira respondeu — risco de baixa competição',          resolution:'2 leiloeiras adicionais acionadas via Hub para o próximo evento'}
+  ],
+  document: [
+    {severity:'low',    anomaly:'CRV pendente >24h no Detran sem retorno',                           resolution:'alerta automático disparado — despachante notificado via Hub'},
+    {severity:'medium', anomaly:'Divergência entre NF-e emitida e valor de arrematação',             resolution:'caso escalado para contabilidade via Hub — auditoria interna'}
+  ]
+};
+
 const AGENTS_DEF = [
   {id:'legal',      name:'Legal Agent',      icon:'⚖️', subtitle:'Agente Jurídico',       color:'#1a3a5c', accent:'#3b82f6', desc:'Monitora PJe, detecta liminares e aciona logística automaticamente.',  status:'running', tasks:'2 liminares hoje', impact:'−5 a −7 dias', trigger:'Liminar deferida no PJe', stakeholder:'Reboque + Devedor + Analista', prompt:'Você é o Legal Agent do BNDU.ia. Monitora despachos judiciais no PJe, interpreta semanticamente decisões, dispara ações automáticas ao detectar liminar deferida. Responda em português.', execTasks:[
     {label:'Monitorando despachos no PJe...',duration:2200,icon:'🔍'},{label:'Liminar deferida detectada — Proc. 0012345-67.2026.8.26.0100',duration:1800,icon:'📄'},{label:'Interpretação semântica: DEFERIDA busca e apreensão',duration:1500,icon:'🧠'},{label:'Extraindo endereço do bem da petição...',duration:1200,icon:'📍'},{label:'Atualizando VIN 360 → status: LIMINAR_DEFERIDA',duration:800,icon:'🚗'},{label:'Gerando minuta de mandado para revisão',duration:1400,icon:'📝'},{label:'✅ Acionando Logistics Agent para coordenar reboque',duration:600,icon:'🚛'}
@@ -1513,6 +1552,8 @@ const AGENTS_DEF = [
   ], output:{alertas:'1 exceção detectada',severidade:'MÉDIA',resolucao:'Automática (re-consulta Detran)',aprendizado:'Lag Detran-MG → guardrails'}, nextAgent:null}
 ];
 const PIPELINE_ORDER = ['legal','logistics','compliance','tax','pricing','auction','document'];
+
+
 
 const now = new Date();
 function daysAgo(n){ const d=new Date(now); d.setDate(d.getDate()-n); return d.toISOString().split('T')[0];}
@@ -1564,13 +1605,14 @@ function resetDemo(){
     execState.running=false;
     execState.pipelineDone=false;
     execState.elapsedDays=0;
+    execState.supervisorInterventions=0;
     execState.outputs={};
     execState.globalLog=[];
     execState.previouslyDone={};
     execState.activeAgent=null;
     execState.selectedAgent='legal';
     if(typeof AGENTS_DEF!=='undefined'){
-      AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
+      AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]=a.id==='supervisor'?'monitoring':'idle';execState.completedTasks[a.id]=0;});
     }
   }
   // Re-render all views that depend on CASES
@@ -2104,7 +2146,7 @@ function renderKanban(){
     const cards=stageCases.map(c=>{
       const daysIn=Math.floor((new Date()-new Date(c.dStage))/86400000);
       return `<div class="kanban-card prio-${c.prioridade}" onclick="openCaseById('${c.id}')">
-        <div class="kanban-blip-dot" onclick="openBlipForCase('${c.id}',event)" title="Blip Hub">💬</div>
+        <div class="kanban-blip-dot" onclick="openBlipForCase('${c.id}',event)" title="Hub">💬</div>
         <div class="kanban-card-id">${c.id}</div>
         <div class="kanban-card-model">${c.veiculo.marca} ${c.veiculo.modelo}</div>
         <div class="kanban-card-plate">🚗 ${c.veiculo.placa} · ${c.veiculo.ano}</div>
@@ -2560,7 +2602,7 @@ function askAgentAboutCase(id){
 // ══════════════════════════════════════
 //  AI AGENTS — EXECUTION DEMO
 // ══════════════════════════════════════
-let execState = {mode:'pipeline',running:false,pipelineDone:false,selectedAgent:'legal',activeAgent:null,agentStates:{},completedTasks:{},outputs:{},globalLog:[],elapsedDays:0,aborted:false,caseId:null,previouslyDone:{}};
+let execState = {mode:'pipeline',running:false,pipelineDone:false,selectedAgent:'legal',activeAgent:null,agentStates:{},completedTasks:{},outputs:{},globalLog:[],elapsedDays:0,aborted:false,caseId:null,previouslyDone:{},supervisorInterventions:0};
 
 // Maps each case stage to the agent that starts execution from there
 const STAGE_TO_AGENT = {
@@ -2609,11 +2651,12 @@ function execResetForCase(){
   execState.running=false;
   execState.pipelineDone=false;
   execState.elapsedDays=0;
+  execState.supervisorInterventions=0;
   execState.outputs={};
   execState.globalLog=[];
   execState.previouslyDone={};
   execState.activeAgent=null;
-  AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
+  AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]=a.id==='supervisor'?'monitoring':'idle';execState.completedTasks[a.id]=0;});
   const ec=getExecCase();
   if(!ec) return;
   const completedBefore=getCompletedAgentsForCase(ec);
@@ -2649,12 +2692,18 @@ function execLogIntro(){
   execAddLog(`🚗 ${ec.id} — ${ec.veiculo.marca} ${ec.veiculo.modelo} — ${ec.veiculo.placa}`,null);
   const currentStage=STAGES.find(s=>s.id===ec.stage)||{};
   execAddLog(`📍 Fase atual: ${currentStage.label||ec.stage} (${currentStage.day||'—'})`,null);
+  execAddLog('👁️ Supervisor Agent ativo — monitoramento de SLAs em tempo real','supervisor');
   const completedBefore=getCompletedAgentsForCase(ec);
   if(completedBefore.length>0){
     const names=completedBefore.map(aid=>AGENTS_DEF.find(x=>x.id===aid)?.name).join(', ');
     execAddLog(`⏪ Etapas anteriores já executadas: ${names}`,null);
   }
 }
+
+
+
+
+
 
 function getNextAgentForCase(){
   const ec=getExecCase();
@@ -2664,6 +2713,74 @@ function getNextAgentForCase(){
     if(execState.agentStates[aid]!=='done') return aid;
   }
   return null;
+}
+
+
+
+const SUPERVISOR_MONITORING_MSGS = [
+  '👁️ Supervisor: SLAs em monitoramento — todos os agentes dentro dos limites',
+  '👁️ Supervisor: VIN 360 sincronizado — sem divergências detectadas',
+  '👁️ Supervisor: Guardrails operando dentro dos parâmetros',
+  '👁️ Supervisor: Audit trail íntegro — Bacen-compliant',
+  '👁️ Supervisor: Performance dos agentes acima do baseline'
+];
+
+
+
+async function execSupervisorCheck(afterAgentId){
+  // Supervisor monitors all agents transversally — 35% chance of intervention per agent completion
+  const scenarios=SUPERVISOR_SCENARIOS[afterAgentId]||[];
+  if(scenarios.length===0||execState.aborted) return;
+  if(Math.random()>0.35) return; // Silent OK — supervisor checked, all good
+
+  execState.supervisorInterventions=(execState.supervisorInterventions||0)+1;
+  const scenario=scenarios[Math.floor(Math.random()*scenarios.length)];
+  const afterAgent=AGENTS_DEF.find(a=>a.id===afterAgentId);
+
+  // Activate Supervisor — without disturbing user's selectedAgent focus
+  execState.agentStates['supervisor']='running';
+  const prevActive=execState.activeAgent;
+  execState.activeAgent='supervisor';
+  renderExecList();renderExecPipeline();
+
+  await execSleep(700);
+  execAddLog(`👁️ Supervisor Agent ativado — verificando ${afterAgent?.name||afterAgentId}...`,'supervisor');
+  await execSleep(1100);
+
+  const sevIcon=scenario.severity==='high'?'🚨':scenario.severity==='medium'?'⚠️':'ℹ️';
+  const sevLabel=scenario.severity==='high'?'ALTA':scenario.severity==='medium'?'MÉDIA':'BAIXA';
+  execAddLog(`${sevIcon} Anomalia detectada [SEV ${sevLabel}]: ${scenario.anomaly}`,'supervisor');
+  await execSleep(1400);
+
+  if(scenario.severity==='high'){
+    execAddLog(`🧑 Escalando para analista humano via Hub (Rafael Torres)...`,'supervisor');
+    await execSleep(1100);
+    execAddLog(`✅ ${scenario.resolution}`,'supervisor');
+  } else if(scenario.severity==='medium'){
+    execAddLog(`🤖 Tentando resolução automática + escalada parcial...`,'supervisor');
+    await execSleep(1300);
+    execAddLog(`✅ ${scenario.resolution}`,'supervisor');
+  } else {
+    execAddLog(`🤖 Iniciando resolução automática...`,'supervisor');
+    await execSleep(1200);
+    execAddLog(`✅ ${scenario.resolution} — guardrails atualizados`,'supervisor');
+  }
+
+  // Add to case historico for traceability
+  const ec=getExecCase();
+  if(ec){
+    ec.historico.push({
+      data:new Date().toISOString().split('T')[0],
+      texto:`Supervisor interceptou anomalia [${sevLabel}] após ${afterAgent?.name}: ${scenario.anomaly}. Resolução: ${scenario.resolution}.`,
+      agente:'Supervisor Agent'
+    });
+  }
+
+  // Return Supervisor to monitoring state (always-on, never 'done')
+  execState.agentStates['supervisor']='monitoring';
+  execState.activeAgent=prevActive;
+  renderExecList();renderExecPipeline();
+  await execSleep(400);
 }
 
 async function execRunNextAgent(){
@@ -2681,6 +2798,9 @@ async function execRunNextAgent(){
   renderExecActions();
 
   await execRunAgent(nextId);
+
+  // Supervisor monitors after agent completes (and may intercept)
+  if(!execState.aborted) await execSupervisorCheck(nextId);
 
   execState.running=false;
   execState.activeAgent=null;
@@ -2713,6 +2833,9 @@ async function execRunPipeline(){
     isFirst=false;
     await execRunAgent(nextId);
     if(execState.aborted) break;
+    // Supervisor monitors after each agent (may intercept)
+    await execSupervisorCheck(nextId);
+    if(execState.aborted) break;
     await execSleep(300);
     nextId=getNextAgentForCase();
   }
@@ -2737,7 +2860,9 @@ function execFinalize(){
   }
 }
 
-AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
+
+
+AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]=a.id==='supervisor'?'monitoring':'idle';execState.completedTasks[a.id]=0;});
 
 function renderAgents(){
   renderExecVehicle();
@@ -2763,18 +2888,23 @@ function renderExecVehicle(){
 function renderExecList(){
   const el=document.getElementById('agents-exec-list');
   if(!el) return;
-  el.innerHTML=AGENTS_DEF.map(a=>{
+  el.innerHTML=AGENTS_DEF.map((a,idx)=>{
     const st=execState.agentStates[a.id];
     const pct=a.execTasks?((execState.completedTasks[a.id]||0)/a.execTasks.length*100):0;
     const isActive=execState.selectedAgent===a.id;
     const isPrev=execState.previouslyDone[a.id];
-    return `<div class="exec-agent-card ${isActive?'active':''} ${st} ${isPrev?'prev-done':''}" onclick="execSelectAgent('${a.id}')" style="${st==='running'?'border-color:'+(a.accent||'var(--cyan)'):st==='done'&&!isPrev?'border-color:var(--green)':''}">
+    const isSupervisor=a.id==='supervisor';
+    // Insert separator before Supervisor (transversal agent, not in linear pipeline)
+    const separator=isSupervisor?`<div class="exec-agents-divider"><span>Monitoramento Transversal</span></div>`:'';
+    let impactText=isPrev?'⏪ Concluído anteriormente':(a.impact||'');
+    if(isSupervisor) impactText=st==='running'?'🔍 Investigando exceção...':'🔍 Monitoramento contínuo · 24/7';
+    return separator+`<div class="exec-agent-card ${isActive?'active':''} ${st} ${isPrev?'prev-done':''} ${isSupervisor?'is-supervisor':''}" onclick="execSelectAgent('${a.id}')" style="${st==='running'?'border-color:'+(a.accent||'var(--cyan)'):st==='done'&&!isPrev?'border-color:var(--green)':''}">
       <div class="exec-agent-card-inner">
         <div class="exec-agent-icon" style="${isPrev?'opacity:.55':''}">${a.icon}</div>
-        <div class="exec-agent-info"><div class="exec-agent-name">${a.name}</div><div class="exec-agent-impact">${isPrev?'⏪ Concluído anteriormente':a.impact||''}</div></div>
+        <div class="exec-agent-info"><div class="exec-agent-name">${a.name}</div><div class="exec-agent-impact">${impactText}</div></div>
         <div class="exec-agent-dot ${st}" style="${isPrev?'background:var(--text3)!important;box-shadow:none!important;animation:none!important':''}"></div>
       </div>
-      ${st==='running'?`<div class="exec-agent-progress" style="width:${pct}%;background:${a.accent||'var(--cyan)'}"></div>`:''}
+      ${st==='running'?`<div class="exec-agent-progress" style="width:${isSupervisor?100:pct}%;background:${a.accent||'var(--cyan)'}"></div>`:''}
     </div>`;
   }).join('');
 }
@@ -2797,15 +2927,16 @@ function renderExecPipeline(){
 function renderExecKPIs(){
   const el=document.getElementById('exec-kpis');
   if(!el) return;
+  const pipelineAgents=AGENTS_DEF.filter(a=>a.id!=='supervisor');
   const running=Object.values(execState.agentStates).filter(s=>s==='running').length;
-  const totalDone=Object.values(execState.completedTasks).reduce((a,b)=>a+b,0);
-  const totalAll=AGENTS_DEF.reduce((a,b)=>a+(b.execTasks?b.execTasks.length:0),0);
-  const done=Object.values(execState.agentStates).filter(s=>s==='done').length;
+  const totalDone=pipelineAgents.reduce((sum,a)=>sum+(execState.completedTasks[a.id]||0),0);
+  const totalAll=pipelineAgents.reduce((a,b)=>a+(b.execTasks?b.execTasks.length:0),0);
+  const done=pipelineAgents.filter(a=>execState.agentStates[a.id]==='done').length;
   el.innerHTML=`
     <div class="exec-kpi"><div class="exec-kpi-val" style="color:var(--cyan)">${running}</div><div class="exec-kpi-label">Agentes Ativos</div></div>
     <div class="exec-kpi"><div class="exec-kpi-val" style="color:var(--green)">${totalDone}</div><div class="exec-kpi-label">Tarefas Concluídas</div><div class="exec-kpi-sub" style="color:var(--text3)">de ${totalAll}</div></div>
     <div class="exec-kpi"><div class="exec-kpi-val" style="color:var(--amber)">${execState.elapsedDays}</div><div class="exec-kpi-label">Dias Economizados</div><div class="exec-kpi-sub" style="color:var(--text3)">vs. processo manual</div></div>
-    <div class="exec-kpi"><div class="exec-kpi-val" style="color:#8b5cf6">${done}</div><div class="exec-kpi-label">Fases Completas</div><div class="exec-kpi-sub" style="color:var(--text3)">de ${AGENTS_DEF.length}</div></div>`;
+    <div class="exec-kpi"><div class="exec-kpi-val" style="color:#8b5cf6">${done}</div><div class="exec-kpi-label">Fases Completas</div><div class="exec-kpi-sub" style="color:var(--text3)">de ${pipelineAgents.length}</div></div>`;
 }
 
 function renderExecTaskPanel(){
@@ -2860,7 +2991,7 @@ function renderExecTaskPanel(){
       <div class="exec-task-meta-item"><div class="exec-task-meta-label">Stakeholder</div><div class="exec-task-meta-value">${a.stakeholder||'—'}</div></div>
       <div class="exec-task-meta-item"><div class="exec-task-meta-label">Impacto</div><div class="exec-task-meta-value" style="color:${accentColor}">${a.impact||'—'}</div></div>
     </div>
-    <div class="exec-task-list-title">Execução de Tarefas (${completed}/${tasks.length})</div>
+    <div class="exec-task-list-title">${a.id==='supervisor'?`Tarefas do Agente · ${execState.supervisorInterventions||0} intervenções nesta sessão`:`Execução de Tarefas (${completed}/${tasks.length})`}</div>
     <div class="exec-task-list">${tasksHTML}</div>
     ${outputHTML}`;
 }
@@ -2924,6 +3055,8 @@ function execAddLog(msg,agentId){
 }
 
 function execSleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+
 
 async function execRunAgent(agentId){
   const agent=AGENTS_DEF.find(a=>a.id===agentId);
@@ -3018,8 +3151,11 @@ function execStop(){
     execState.completedTasks[aid]=0;
   }
   execState.activeAgent=null;
-  // Also clear any 'waiting' states
-  AGENTS_DEF.forEach(a=>{if(execState.agentStates[a.id]==='waiting') execState.agentStates[a.id]='idle';});
+  // Also clear any 'waiting' states; restore supervisor to monitoring
+  AGENTS_DEF.forEach(a=>{
+    if(execState.agentStates[a.id]==='waiting') execState.agentStates[a.id]=a.id==='supervisor'?'monitoring':'idle';
+    if(a.id==='supervisor' && execState.agentStates[a.id]==='running') execState.agentStates[a.id]='monitoring';
+  });
   execAddLog('⏹ Execução interrompida pelo usuário',null);
   renderExecActions();renderExecPipeline();renderExecList();renderExecTaskPanel();
 }
