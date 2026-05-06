@@ -1350,6 +1350,14 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
               <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;"><input type="checkbox" style="accent-color:var(--cyan);width:15px;height:15px;"> Relatório semanal por e-mail</label>
             </div>
           </div>
+          <div class="dash-card" style="background:var(--surface);border:1px solid rgba(245,166,35,.3);border-radius:10px;padding:24px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:18px">🔄</span><div class="section-title" style="margin:0">Modo Demonstração</div></div>
+            <div class="section-sub">Restaura todos os casos ao estado inicial — fases, históricos e progresso. Útil para preparar uma nova demonstração ao vivo.</div>
+            <div style="display:flex;gap:12px;align-items:center;margin-top:14px;">
+              <button class="header-btn" onclick="resetDemo()" style="background:rgba(245,166,35,.12);border:1px solid var(--amber);color:var(--amber);font-weight:600">🔄 Resetar Demo</button>
+              <span style="font-size:11px;color:var(--text3)">Casos atuais: <strong style="color:var(--text2)" id="settings-case-count">—</strong></span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1373,7 +1381,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
     <div class="panel-tab" onclick="switchPanelTab('timeline',this)">Timeline</div>
     <div class="panel-tab" onclick="switchPanelTab('debitos',this)">Débitos</div>
     <div class="panel-tab" onclick="switchPanelTab('documentos',this)">Documentos</div>
-    <div class="panel-tab" style="color:var(--cyan)" onclick="openBlipForCase(STATE.selectedCase,event)">💬 Blip</div>
+    <div class="panel-tab" style="color:var(--cyan)" onclick="openBlipForCase(STATE.selectedCase,event)">💬 Hub</div>
     <div class="panel-tab" style="color:var(--amber)" onclick="switchPanelTab('vin360',this)">🚗 VIN 360</div>
   </div>
   <div class="panel-body">
@@ -1465,6 +1473,17 @@ const STAGES = [
   {id:'baixa',          label:'Baixa Contábil',       color:'#06D6A0', day:'D+80'}
 ];
 
+// Maps each agent to the case stage that follows after it completes its work
+const AGENT_TO_NEXT_STAGE = {
+  legal:      'retomada',     // Legal concludes → handed off to Logistics (retomada)
+  logistics:  'vistoria',     // Logistics concludes → handed off to Compliance (vistoria)
+  compliance: 'sanitizacao',  // Compliance concludes → handed off to Tax (sanitização)
+  tax:        'avaliacao',    // Tax concludes → handed off to Pricing (avaliação)
+  pricing:    'leilao',       // Pricing concludes → handed off to Auction (leilão)
+  auction:    'baixa',        // Auction concludes → handed off to Document (baixa)
+  document:   'baixa'         // Document concludes the case at baixa
+};
+
 const AGENTS_DEF = [
   {id:'legal',      name:'Legal Agent',      icon:'⚖️', subtitle:'Agente Jurídico',       color:'#1a3a5c', accent:'#3b82f6', desc:'Monitora PJe, detecta liminares e aciona logística automaticamente.',  status:'running', tasks:'2 liminares hoje', impact:'−5 a −7 dias', trigger:'Liminar deferida no PJe', stakeholder:'Reboque + Devedor + Analista', prompt:'Você é o Legal Agent do BNDU.ia. Monitora despachos judiciais no PJe, interpreta semanticamente decisões, dispara ações automáticas ao detectar liminar deferida. Responda em português.', execTasks:[
     {label:'Monitorando despachos no PJe...',duration:2200,icon:'🔍'},{label:'Liminar deferida detectada — Proc. 0012345-67.2026.8.26.0100',duration:1800,icon:'📄'},{label:'Interpretação semântica: DEFERIDA busca e apreensão',duration:1500,icon:'🧠'},{label:'Extraindo endereço do bem da petição...',duration:1200,icon:'📍'},{label:'Atualizando VIN 360 → status: LIMINAR_DEFERIDA',duration:800,icon:'🚗'},{label:'Gerando minuta de mandado para revisão',duration:1400,icon:'📝'},{label:'✅ Acionando Logistics Agent para coordenar reboque',duration:600,icon:'🚛'}
@@ -1525,6 +1544,45 @@ let CASES = [
   {id:'BND-024',contrato:'2023-456781',devedor:{nome:'Cristina Sousa Dias',cpf:'444.666.888-00',tel:'(51) 97654-2345'},veiculo:{marca:'Ford',modelo:'Territory Titanium',ano:2021,placa:'RST-4A56',renavam:'00444666888',chassi:'MAJFXXMTOML123456',cor:'Azul'},valorDivida:58000,fipe:108000,stage:'avaliacao',dInicio:daysAgo(85),dStage:daysAgo(5),estado:'RS',prioridade:'alta',responsavel:'Ana Lima',debitos:{ipva:0,dpvat:0,multas:0,taxas:0},historico:[{data:daysAgo(85),texto:'Caso iniciado',agente:'Risk Agent'},{data:daysAgo(38),texto:'Veículo apreendido',agente:'Recovery Ops Agent'},{data:daysAgo(5),texto:'Avaliação: FIPE R$ 108.000 — lance mínimo: R$ 86.400',agente:'Pricing Agent'}]},
   {id:'BND-025',contrato:'2024-567891',devedor:{nome:'Bruno Mendes Faria',cpf:'555.777.999-11',tel:'(85) 96543-3456'},veiculo:{marca:'Chevrolet',modelo:'S10 LTZ',ano:2020,placa:'UVW-5B67',renavam:'00555777999',chassi:'9BGJF1ER5LB123456',cor:'Preto'},valorDivida:62000,fipe:115000,stage:'inadimplencia',dInicio:daysAgo(7),dStage:daysAgo(7),estado:'CE',prioridade:'alta',responsavel:'Lucas Oliveira',debitos:{ipva:2100,dpvat:0,multas:650,taxas:380},historico:[{data:daysAgo(7),texto:'Contrato identificado — 96 dias inadimplente',agente:'Risk Agent'},{data:daysAgo(6),texto:'Score 9.1/10 — alto risco. Recomendado execução imediata.',agente:'Supervisor Agent'}]}
 ];
+
+// ══════════════════════════════════════
+//  DEMO RESET — snapshot initial state of CASES
+// ══════════════════════════════════════
+const INITIAL_CASES_SNAPSHOT = JSON.parse(JSON.stringify(CASES));
+
+function resetDemo(){
+  if(!confirm('Resetar a demo?\n\nTodos os casos voltarão ao estado original (fases, históricos e progresso).\nO estado dos agentes e logs também serão limpos.')) return;
+  // Restore CASES to original snapshot
+  CASES.length=0;
+  JSON.parse(JSON.stringify(INITIAL_CASES_SNAPSHOT)).forEach(c=>CASES.push(c));
+  // Reset pipeline execution state
+  if(typeof execState!=='undefined'){
+    execState.aborted=true;
+    execState.caseId=null;
+    execState.running=false;
+    execState.pipelineDone=false;
+    execState.elapsedDays=0;
+    execState.outputs={};
+    execState.globalLog=[];
+    execState.previouslyDone={};
+    execState.activeAgent=null;
+    execState.selectedAgent='legal';
+    if(typeof AGENTS_DEF!=='undefined'){
+      AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
+    }
+  }
+  // Re-render all views that depend on CASES
+  if(typeof renderPortfolio==='function') renderPortfolio();
+  if(typeof renderDashboard==='function') renderDashboard();
+  if(typeof renderAgents==='function') renderAgents();
+  if(typeof renderRelatorios==='function') renderRelatorios();
+  if(typeof renderRoleKPIs==='function') renderRoleKPIs();
+  if(typeof renderApprovalQueue==='function') renderApprovalQueue();
+  // Update portfolio badge
+  const pb=document.getElementById('portfolio-badge');
+  if(pb) pb.textContent=CASES.length;
+  showToast('success','✅ Demo resetada — todos os casos restaurados ao estado original');
+}
 
 // ══════════════════════════════════════
 //  SUPABASE CONFIG
@@ -1856,6 +1914,10 @@ function navigate(view){
   document.getElementById('header-title').innerHTML=t[0]+` <span>${t[1]}</span>`;
   if(view==='bliphub') renderBlipHub();
   if(view==='vin360') renderVin360Explorer();
+  if(view==='configuracoes'){
+    const cc=document.getElementById('settings-case-count');
+    if(cc) cc.textContent=CASES.length+' casos no portfólio';
+  }
 }
 
 // ══════════════════════════════════════
@@ -2808,6 +2870,24 @@ async function execRunAgent(agentId){
   const impactMatch=(agent.impact||'').match(/(\d+)/);
   execState.elapsedDays+=parseInt(impactMatch?impactMatch[1]:'3');
   execAddLog(`✅ ${agent.name} concluído — Impacto: ${agent.impact}`,agentId);
+
+  // Advance case stage to reflect the agent's completion
+  if(ec){
+    const nextStageId=AGENT_TO_NEXT_STAGE[agentId];
+    if(nextStageId && ec.stage!==nextStageId){
+      const prevStageObj=STAGES.find(s=>s.id===ec.stage)||{};
+      const newStageObj=STAGES.find(s=>s.id===nextStageId)||{};
+      ec.stage=nextStageId;
+      ec.dStage=new Date().toISOString().split('T')[0];
+      ec.historico.push({
+        data:ec.dStage,
+        texto:`${agent.name} concluído — caso avançou de ${prevStageObj.label||'—'} para ${newStageObj.label||nextStageId}`,
+        agente:agent.name
+      });
+      execAddLog(`📈 Caso avançou: ${prevStageObj.label} → ${newStageObj.label}`,null);
+      renderExecVehicle();
+    }
+  }
   renderExecList();renderExecPipeline();renderExecTaskPanel();renderExecKPIs();
 }
 
@@ -2899,6 +2979,9 @@ async function execRunPipeline(){
   execState.running=false;
   execState.activeAgent=null;
   renderExecActions();renderExecPipeline();renderExecKPIs();
+  // Sync downstream views so the case progression reflects everywhere
+  if(typeof renderPortfolio==='function') renderPortfolio();
+  if(typeof renderDashboard==='function') renderDashboard();
 }
 
 function execStop(){
