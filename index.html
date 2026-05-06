@@ -665,6 +665,8 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .pipeline-actions{display:flex;gap:8px;align-items:center;}
 .exec-run-btn{padding:6px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--cyan);background:rgba(0,196,232,.1);color:var(--cyan);font-family:'IBM Plex Sans',sans-serif;transition:all .15s;}
 .exec-run-btn:hover{background:rgba(0,196,232,.2);}
+.exec-run-btn.secondary{background:transparent;border-color:var(--border2);color:var(--text2);}
+.exec-run-btn.secondary:hover{background:var(--bg3);border-color:var(--text3);color:var(--text);}
 .exec-run-btn.stop{border-color:#ef4444;background:rgba(239,68,68,.1);color:#ef4444;}
 .exec-done-label{font-size:11px;color:var(--green);font-weight:700;font-family:'IBM Plex Mono',monospace;}
 
@@ -2502,7 +2504,7 @@ function renderPanelActions(c){
   const actions=document.getElementById('panel-actions');
   
   let btns='';
-  btns+=`<button class="action-btn" onclick="launchPipelineForCase('${c.id}')" style="background:linear-gradient(135deg,rgba(0,196,232,.15),rgba(139,92,246,.15));border:1.5px solid var(--cyan);color:var(--cyan);font-family:'Syne',sans-serif;font-weight:700;letter-spacing:-.02em;">🚀 Executar Pipeline com Agentes de IA</button>`;
+  btns+=`<button class="action-btn" onclick="launchPipelineForCase('${c.id}')" style="background:linear-gradient(135deg,rgba(0,196,232,.15),rgba(139,92,246,.15));border:1.5px solid var(--cyan);color:var(--cyan);font-family:'Syne',sans-serif;font-weight:700;letter-spacing:-.02em;">🚀 Iniciar Automação com Agentes de IA</button>`;
   if(nextStage){
     btns+=`<button class="action-btn action-btn-primary" onclick="advanceCase('${c.id}')">▶ Avançar para ${nextStage.label}</button>`;
   } else {
@@ -2587,48 +2589,154 @@ function getExecCase(){
 }
 
 function launchPipelineForCase(caseId){
+  // Called from case panel — sets up state and runs only the FIRST agent
   execState.caseId=caseId;
   const c=CASES.find(x=>x.id===caseId);
-  execState.running=false;
-  execState.pipelineDone=false;
-  execState.elapsedDays=0;
-  execState.outputs={};
-  execState.globalLog=[];
+  execResetForCase();
   execState.selectedAgent=c?(STAGE_TO_AGENT[c.stage]||'legal'):'legal';
-  execState.activeAgent=null;
-  execState.aborted=false;
-  execState.previouslyDone={};
-  AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
   closePanel();
   navigate('agents');
-  setTimeout(()=>{renderAgents();execRunPipeline();},200);
+  setTimeout(()=>{
+    renderAgents();
+    execLogIntro();
+    execRunNextAgent();
+  },200);
 }
 
-function goToAgentsForCase(caseId){
-  execState.caseId=caseId;
-  const c=CASES.find(x=>x.id===caseId);
+function execResetForCase(){
+  // Resets execution state and pre-marks agents already done by case stage
+  execState.aborted=false;
   execState.running=false;
   execState.pipelineDone=false;
   execState.elapsedDays=0;
   execState.outputs={};
   execState.globalLog=[];
-  execState.selectedAgent=c?(STAGE_TO_AGENT[c.stage]||'legal'):'legal';
-  execState.activeAgent=null;
-  execState.aborted=false;
   execState.previouslyDone={};
+  execState.activeAgent=null;
   AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
-  // Pre-mark already-completed agents as done (visually only, no outputs yet)
-  if(c){
-    const completedBefore=getCompletedAgentsForCase(c);
-    completedBefore.forEach(aid=>{
-      const a=AGENTS_DEF.find(x=>x.id===aid);
-      if(a){execState.agentStates[aid]='done';execState.completedTasks[aid]=a.execTasks.length;execState.previouslyDone[aid]=true;}
-    });
-  }
-  closePanel();
-  navigate('agents');
-  setTimeout(()=>renderAgents(),200);
+  const ec=getExecCase();
+  if(!ec) return;
+  const completedBefore=getCompletedAgentsForCase(ec);
+  completedBefore.forEach(aid=>{
+    const a=AGENTS_DEF.find(x=>x.id===aid);
+    if(!a) return;
+    execState.agentStates[aid]='done';
+    execState.completedTasks[aid]=a.execTasks.length;
+    execState.previouslyDone[aid]=true;
+    // Build enriched output for already-done agents
+    let agentOutput=Object.assign({},a.output);
+    if(aid==='legal') agentOutput.processo=`${ec.contrato} — ${ec.estado}`;
+    if(aid==='compliance') agentOutput.chassi=ec.veiculo.chassi;
+    if(aid==='tax'){
+      const td=ec.debitos.ipva+ec.debitos.multas+ec.debitos.taxas;
+      agentOutput.totalDebitos=fmtCurrency(td);
+      agentOutput.ipva=fmtCurrency(ec.debitos.ipva);
+      agentOutput.multas=fmtCurrency(ec.debitos.multas);
+    }
+    if(aid==='pricing'){
+      agentOutput.fipe=fmtCurrency(ec.fipe);
+      const reserva=Math.round(ec.fipe*0.8);
+      agentOutput.precoReserva=fmtCurrency(reserva);
+    }
+    execState.outputs[aid]=agentOutput;
+  });
 }
+
+function execLogIntro(){
+  const ec=getExecCase();
+  execAddLog('🚀 Pipeline BNDU.ia iniciado',null);
+  if(!ec){execAddLog('🚗 Veículo de demonstração',null);return;}
+  execAddLog(`🚗 ${ec.id} — ${ec.veiculo.marca} ${ec.veiculo.modelo} — ${ec.veiculo.placa}`,null);
+  const currentStage=STAGES.find(s=>s.id===ec.stage)||{};
+  execAddLog(`📍 Fase atual: ${currentStage.label||ec.stage} (${currentStage.day||'—'})`,null);
+  const completedBefore=getCompletedAgentsForCase(ec);
+  if(completedBefore.length>0){
+    const names=completedBefore.map(aid=>AGENTS_DEF.find(x=>x.id===aid)?.name).join(', ');
+    execAddLog(`⏪ Etapas anteriores já executadas: ${names}`,null);
+  }
+}
+
+function getNextAgentForCase(){
+  const ec=getExecCase();
+  if(!ec) return null;
+  const agentsToRun=getAgentsForCase(ec);
+  for(const aid of agentsToRun){
+    if(execState.agentStates[aid]!=='done') return aid;
+  }
+  return null;
+}
+
+async function execRunNextAgent(){
+  // Runs ONLY the next idle agent
+  const nextId=getNextAgentForCase();
+  if(!nextId){
+    execAddLog('✅ Todos os agentes já foram executados',null);
+    execState.pipelineDone=true;
+    renderExecActions();
+    return;
+  }
+  if(execState.running) return;
+  execState.aborted=false;
+  execState.running=true;
+  renderExecActions();
+
+  await execRunAgent(nextId);
+
+  execState.running=false;
+  execState.activeAgent=null;
+  // Check if anything more remains
+  if(!getNextAgentForCase()) execFinalize();
+  renderExecActions();renderExecPipeline();renderExecKPIs();
+  if(typeof renderPortfolio==='function') renderPortfolio();
+  if(typeof renderDashboard==='function') renderDashboard();
+}
+
+async function execRunPipeline(){
+  // Runs ALL remaining agents in sequence
+  if(execState.running) return;
+  if(!getNextAgentForCase()){
+    execAddLog('✅ Não há agentes pendentes — pipeline já completo',null);
+    return;
+  }
+  execState.aborted=false;
+  execState.running=true;
+  renderExecActions();
+
+  let nextId=getNextAgentForCase();
+  let isFirst=true;
+  while(nextId && !execState.aborted){
+    if(!isFirst){
+      execState.agentStates[nextId]='waiting';
+      renderExecList();renderExecPipeline();
+      await execSleep(500);
+    }
+    isFirst=false;
+    await execRunAgent(nextId);
+    if(execState.aborted) break;
+    await execSleep(300);
+    nextId=getNextAgentForCase();
+  }
+
+  execState.running=false;
+  execState.activeAgent=null;
+  if(!execState.aborted && !getNextAgentForCase()) execFinalize();
+  renderExecActions();renderExecPipeline();renderExecKPIs();
+  if(typeof renderPortfolio==='function') renderPortfolio();
+  if(typeof renderDashboard==='function') renderDashboard();
+}
+
+function execFinalize(){
+  // Called when all agents have completed
+  execState.pipelineDone=true;
+  const doneCase=getExecCase();
+  if(doneCase){
+    doneCase.historico.push({data:new Date().toISOString().split('T')[0],texto:`Pipeline BNDU.ia completo — ${execState.elapsedDays} dias economizados.`,agente:'Supervisor Agent'});
+    execAddLog(`🏁 Pipeline completo — ${doneCase.id} ${doneCase.veiculo.marca} ${doneCase.veiculo.modelo} encerrado!`,null);
+  } else {
+    execAddLog('🏁 Pipeline completo!',null);
+  }
+}
+
 AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
 
 function renderAgents(){
@@ -2778,15 +2886,23 @@ function renderExecActions(){
   const el=document.getElementById('pipeline-actions');
   if(!el) return;
   let html='';
-  if(execState.pipelineDone) html+=`<span class="exec-done-label">✅ Ciclo Completo!</span>`;
   if(execState.running){
     html+=`<button class="exec-run-btn stop" onclick="execStop()">⏹ Parar</button>`;
   } else if(!getExecCase()){
     html+=`<button class="exec-run-btn" onclick="navigate('portfolio')" style="border-color:var(--amber);color:var(--amber)">📋 Selecionar Caso</button>`;
   } else {
     const ec=getExecCase();
-    html+=`<span style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-right:6px">${ec.id}</span>`;
-    html+=`<button class="exec-run-btn" onclick="execRunPipeline()">▶ Executar Pipeline</button>`;
+    const nextId=getNextAgentForCase();
+    if(nextId){
+      html+=`<span style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-right:6px">${ec.id}</span>`;
+      const nextAgent=AGENTS_DEF.find(a=>a.id===nextId);
+      html+=`<button class="exec-run-btn" onclick="execRunNextAgent()" title="Executa apenas o próximo agente">▶ Próximo: ${nextAgent.name}</button>`;
+      html+=`<button class="exec-run-btn secondary" onclick="execRunPipeline()" title="Executa todos os agentes restantes em sequência">▶▶ Executar Pipeline</button>`;
+    } else if(execState.pipelineDone){
+      html+=`<span class="exec-done-label">✅ Ciclo Completo — ${ec.id}</span>`;
+    } else {
+      html+=`<span style="font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace">${ec.id} — sem agentes pendentes</span>`;
+    }
   }
   el.innerHTML=html;
 }
@@ -2891,104 +3007,21 @@ async function execRunAgent(agentId){
   renderExecList();renderExecPipeline();renderExecTaskPanel();renderExecKPIs();
 }
 
-async function execRunPipeline(){
-  execState.aborted=false;
-  execState.running=true;
-  execState.pipelineDone=false;
-  execState.elapsedDays=0;
-  execState.outputs={};
-  execState.globalLog=[];
-  execState.previouslyDone={};
-  AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
-
-  const ec=getExecCase();
-  const agentsToRun=getAgentsForCase(ec);
-  const completedBefore=getCompletedAgentsForCase(ec);
-  const currentStage=ec?(STAGES.find(s=>s.id===ec.stage)||{}):{};
-
-  // Pre-mark agents that already executed in previous stages
-  completedBefore.forEach(aid=>{
-    const a=AGENTS_DEF.find(x=>x.id===aid);
-    if(!a) return;
-    execState.agentStates[aid]='done';
-    execState.completedTasks[aid]=a.execTasks.length;
-    execState.previouslyDone[aid]=true;
-    // Build enriched output for already-done agents too
-    let agentOutput=Object.assign({},a.output);
-    if(ec){
-      if(aid==='legal') agentOutput.processo=`${ec.contrato} — ${ec.estado}`;
-      if(aid==='compliance') agentOutput.chassi=ec.veiculo.chassi;
-      if(aid==='tax'){
-        const td=ec.debitos.ipva+ec.debitos.multas+ec.debitos.taxas;
-        agentOutput.totalDebitos=fmtCurrency(td);
-        agentOutput.ipva=fmtCurrency(ec.debitos.ipva);
-        agentOutput.multas=fmtCurrency(ec.debitos.multas);
-      }
-      if(aid==='pricing'){
-        agentOutput.fipe=fmtCurrency(ec.fipe);
-        const reserva=Math.round(ec.fipe*0.8);
-        agentOutput.precoReserva=fmtCurrency(reserva);
-      }
-    }
-    execState.outputs[aid]=agentOutput;
-  });
-
-  renderExecActions();renderExecList();renderExecPipeline();renderExecKPIs();renderExecLog();
-
-  execAddLog('🚀 Pipeline BNDU.ia iniciado',null);
-  if(ec){
-    execAddLog(`🚗 ${ec.id} — ${ec.veiculo.marca} ${ec.veiculo.modelo} — ${ec.veiculo.placa}`,null);
-    execAddLog(`📍 Fase atual: ${currentStage.label||ec.stage} (${currentStage.day||'—'})`,null);
-    if(completedBefore.length>0){
-      const names=completedBefore.map(aid=>AGENTS_DEF.find(x=>x.id===aid)?.name).join(', ');
-      execAddLog(`⏪ Etapas anteriores já executadas: ${names}`,null);
-    }
-    if(agentsToRun.length===0){
-      execAddLog('✅ Caso já completou todas as fases — nada a executar',null);
-      execState.pipelineDone=true;
-      execState.running=false;
-      renderExecActions();renderExecPipeline();renderExecKPIs();
-      return;
-    }
-    execAddLog(`▶ Retomando pipeline a partir de: ${AGENTS_DEF.find(x=>x.id===agentsToRun[0])?.name}`,null);
-  } else {
-    execAddLog('🚗 Veículo de demonstração',null);
-  }
-
-  for(const agentId of agentsToRun){
-    if(execState.aborted) break;
-    if(agentId!==agentsToRun[0]){
-      execState.agentStates[agentId]='waiting';
-      renderExecList();renderExecPipeline();
-      await execSleep(500);
-    }
-    await execRunAgent(agentId);
-    await execSleep(300);
-  }
-
-  if(!execState.aborted){
-    const doneCase=getExecCase();
-    if(doneCase){
-      doneCase.historico.push({data:new Date().toISOString().split('T')[0],texto:`Pipeline BNDU.ia executado a partir de ${currentStage.label||doneCase.stage} — ${execState.elapsedDays} dias economizados.`,agente:'Supervisor Agent'});
-      execAddLog(`🏁 Pipeline completo — ${doneCase.id} ${doneCase.veiculo.marca} ${doneCase.veiculo.modelo} encerrado!`,null);
-    } else {
-      execAddLog('🏁 Pipeline completo!',null);
-    }
-    execState.pipelineDone=true;
-  }
-  execState.running=false;
-  execState.activeAgent=null;
-  renderExecActions();renderExecPipeline();renderExecKPIs();
-  // Sync downstream views so the case progression reflects everywhere
-  if(typeof renderPortfolio==='function') renderPortfolio();
-  if(typeof renderDashboard==='function') renderDashboard();
-}
 
 function execStop(){
   execState.aborted=true;
   execState.running=false;
+  // Reset agent that was mid-execution back to idle
+  if(execState.activeAgent){
+    const aid=execState.activeAgent;
+    execState.agentStates[aid]='idle';
+    execState.completedTasks[aid]=0;
+  }
   execState.activeAgent=null;
-  renderExecActions();renderExecPipeline();
+  // Also clear any 'waiting' states
+  AGENTS_DEF.forEach(a=>{if(execState.agentStates[a.id]==='waiting') execState.agentStates[a.id]='idle';});
+  execAddLog('⏹ Execução interrompida pelo usuário',null);
+  renderExecActions();renderExecPipeline();renderExecList();renderExecTaskPanel();
 }
 
 function selectAgent(agentId){ execSelectAgent(agentId); }
