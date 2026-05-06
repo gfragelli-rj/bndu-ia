@@ -618,55 +618,105 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 .debt-table td:last-child{text-align:right;font-family:'IBM Plex Mono',monospace;}
 
 /* ══════════════════════════════════════
-   AI AGENTS VIEW
+   AI AGENTS VIEW — EXECUTION DEMO
 ══════════════════════════════════════ */
-.agents-layout{display:grid;grid-template-columns:280px 1fr;gap:20px;height:calc(100vh - var(--header-h) - 48px);}
-.agents-list-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;}
-.agents-list-header{padding:16px 18px;border-bottom:1px solid var(--border);}
-.agents-list-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:2px;}
-.agents-list-sub{font-size:11px;color:var(--text3);}
-.agents-list-body{flex:1;overflow-y:auto;padding:8px;}
-.agent-card-item{padding:12px;border-radius:8px;cursor:pointer;transition:all .15s;margin-bottom:4px;border:1px solid transparent;}
-.agent-card-item:hover{background:var(--bg3);}
-.agent-card-item.active{background:rgba(0,196,232,.08);border-color:rgba(0,196,232,.25);}
-.agent-card-icon{font-size:20px;margin-bottom:6px;}
-.agent-card-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:2px;}
-.agent-card-status{font-size:11px;display:flex;align-items:center;gap:5px;}
-.agent-card-status.running{color:var(--green);}
-.agent-card-status.idle{color:var(--text3);}
-.agent-card-status.alert{color:var(--amber);}
-.agent-card-tasks{font-size:10.5px;color:var(--text3);margin-top:4px;font-family:'IBM Plex Mono',monospace;}
+.agents-exec-layout{display:grid;grid-template-columns:270px 1fr;gap:0;height:calc(100vh - var(--header-h) - 48px);}
+.agents-exec-sidebar{background:var(--surface);border-right:1px solid var(--border);padding:12px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
+.agents-exec-vehicle{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.exec-veh-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.exec-veh-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;}
+.exec-veh-sub{font-size:11px;color:var(--text3);}
+.exec-veh-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;}
+.exec-veh-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;}
+.exec-veh-value{font-size:12px;font-weight:600;margin-top:1px;}
+.agents-exec-mode-bar{display:flex;gap:6px;}
+.exec-mode-btn{flex:1;padding:7px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text3);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'IBM Plex Sans',sans-serif;}
+.exec-mode-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,196,232,.08);}
+.agents-exec-list-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;}
+.agents-exec-list{display:flex;flex-direction:column;gap:5px;flex:1;overflow-y:auto;}
+.exec-agent-card{padding:10px 12px;border-radius:9px;cursor:pointer;border:1.5px solid transparent;transition:all .2s;position:relative;overflow:hidden;}
+.exec-agent-card:hover{background:var(--bg3);}
+.exec-agent-card.active{border-color:var(--cyan);background:rgba(0,196,232,.06);}
+.exec-agent-card.running{background:rgba(0,196,232,.04);}
+.exec-agent-card.done{background:rgba(6,214,160,.04);}
+.exec-agent-card-inner{display:flex;align-items:center;gap:9px;}
+.exec-agent-icon{font-size:22px;line-height:1;}
+.exec-agent-info{flex:1;min-width:0;}
+.exec-agent-name{font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.exec-agent-impact{font-size:10.5px;color:var(--text3);margin-top:1px;}
+.exec-agent-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;transition:all .3s;}
+.exec-agent-dot.running{background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:pulse 1.5s infinite;}
+.exec-agent-dot.done{background:var(--green);}
+.exec-agent-dot.waiting{background:var(--amber);animation:pulse 1s infinite;}
+.exec-agent-dot.idle{background:var(--text3);}
+.exec-agent-progress{position:absolute;bottom:0;left:0;height:2.5px;background:var(--cyan);transition:width .4s ease;border-radius:0 2px 0 0;}
 
-.agent-console{background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;overflow:hidden;}
-.console-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
-.console-agent-icon{font-size:24px;}
-.console-agent-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;}
-.console-agent-desc{font-size:12px;color:var(--text3);}
-.console-status-pill{padding:4px 10px;border-radius:10px;font-size:10.5px;font-family:'IBM Plex Mono',monospace;margin-left:auto;}
-.console-status-pill.running{background:rgba(6,214,160,.1);color:var(--green);border:1px solid rgba(6,214,160,.3);}
-.console-status-pill.idle{background:var(--bg3);color:var(--text3);}
-.console-msgs{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
-.msg{max-width:85%;padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.55;}
-.msg.system{background:var(--bg3);color:var(--text2);border:1px solid var(--border);border-radius:10px 10px 10px 2px;margin-right:auto;}
-.msg.user{background:rgba(0,196,232,.12);color:var(--text);border:1px solid rgba(0,196,232,.2);border-radius:10px 10px 2px 10px;margin-left:auto;}
-.msg.ai{background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:10px 10px 10px 2px;margin-right:auto;}
-.msg-time{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-top:4px;}
-.msg-agent{font-size:10.5px;color:var(--cyan);margin-bottom:4px;font-weight:600;}
-.console-loading{display:flex;gap:4px;padding:12px 14px;background:var(--surface2);border-radius:10px;width:fit-content;}
-.console-loading span{width:8px;height:8px;background:var(--cyan);border-radius:50%;animation:loading-bounce .8s ease infinite;}
-.console-loading span:nth-child(2){animation-delay:.15s;}
-.console-loading span:nth-child(3){animation-delay:.3s;}
-@keyframes loading-bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);};}
-.console-input-area{padding:16px 20px;border-top:1px solid var(--border);}
-.console-context-select{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
-.context-chip{padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;font-size:11px;cursor:pointer;transition:all .15s;font-family:'IBM Plex Mono',monospace;color:var(--text2);}
-.context-chip:hover,.context-chip.active{border-color:var(--cyan);color:var(--cyan);background:rgba(0,196,232,.08);}
-.console-input-row{display:flex;gap:8px;}
-.console-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;font-family:'IBM Plex Sans',sans-serif;resize:none;max-height:80px;}
-.console-input:focus{border-color:var(--cyan);}
-.console-send{padding:10px 18px;background:linear-gradient(135deg,var(--cyan),var(--cyan2));border:none;border-radius:8px;color:#000;font-weight:700;cursor:pointer;font-size:13px;flex-shrink:0;}
-.console-send:hover{box-shadow:0 4px 16px rgba(0,196,232,.3);}
-.console-send:disabled{opacity:.5;cursor:not-allowed;}
+.agents-exec-center{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.agents-exec-pipeline-bar{padding:10px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);}
+.pipeline-mini{display:flex;align-items:center;gap:2px;}
+.pipeline-node{display:flex;align-items:center;justify-content:center;border-radius:50%;transition:all .3s;border:2px solid var(--border);background:var(--bg3);font-size:13px;}
+.pipeline-node.sm{width:28px;height:28px;}
+.pipeline-node.lg{width:34px;height:34px;font-size:16px;box-shadow:0 0 12px rgba(0,196,232,.2);}
+.pipeline-node.done{border-color:var(--green);background:rgba(6,214,160,.12);}
+.pipeline-node.running{border-color:var(--cyan);background:rgba(0,196,232,.15);}
+.pipeline-link{width:16px;height:2px;background:var(--border);transition:background .4s;flex-shrink:0;}
+.pipeline-link.active{background:var(--green);}
+.pipeline-actions{display:flex;gap:8px;align-items:center;}
+.exec-run-btn{padding:6px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--cyan);background:rgba(0,196,232,.1);color:var(--cyan);font-family:'IBM Plex Sans',sans-serif;transition:all .15s;}
+.exec-run-btn:hover{background:rgba(0,196,232,.2);}
+.exec-run-btn.stop{border-color:#ef4444;background:rgba(239,68,68,.1);color:#ef4444;}
+.exec-done-label{font-size:11px;color:var(--green);font-weight:700;font-family:'IBM Plex Mono',monospace;}
+
+.agents-exec-kpis{padding:10px 18px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;border-bottom:1px solid var(--border);}
+.exec-kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center;}
+.exec-kpi-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;}
+.exec-kpi-label{font-size:10.5px;color:var(--text3);margin-top:2px;}
+.exec-kpi-sub{font-size:10px;margin-top:1px;}
+
+.agents-exec-detail-area{flex:1;display:grid;grid-template-columns:1fr 300px;gap:0;overflow:hidden;}
+.agents-exec-task-panel{padding:16px 18px;overflow-y:auto;display:flex;flex-direction:column;}
+.exec-task-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.exec-task-icon{font-size:28px;}
+.exec-task-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+.exec-task-subtitle{font-size:11.5px;margin-top:1px;}
+.exec-task-pill{margin-left:auto;padding:3px 10px;border-radius:16px;font-size:10px;font-weight:600;font-family:'IBM Plex Mono',monospace;border:1px solid var(--border);}
+.exec-task-pill.running{background:rgba(0,196,232,.1);color:var(--cyan);border-color:rgba(0,196,232,.3);}
+.exec-task-pill.done{background:rgba(6,214,160,.1);color:var(--green);border-color:rgba(6,214,160,.3);}
+.exec-task-pill.idle{background:var(--bg3);color:var(--text3);}
+.exec-task-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;}
+.exec-task-meta-item{background:var(--bg3);border-radius:7px;padding:7px 10px;}
+.exec-task-meta-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;}
+.exec-task-meta-value{font-size:11px;font-weight:600;margin-top:2px;}
+.exec-task-list-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+.exec-task-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;}
+.exec-task-item{display:flex;align-items:flex-start;gap:9px;padding:7px 10px;border-radius:8px;transition:all .3s;border-left:3px solid transparent;}
+.exec-task-item.active{background:rgba(0,196,232,.06);border-left-color:var(--cyan);}
+.exec-task-item.done{opacity:1;}
+.exec-task-item.pending{opacity:.3;}
+.exec-task-item-icon{font-size:15px;flex-shrink:0;margin-top:1px;}
+.exec-task-item-label{font-size:12px;line-height:1.4;flex:1;}
+.exec-task-done-tag{font-size:9.5px;color:var(--green);margin-top:2px;font-family:'IBM Plex Mono',monospace;}
+.exec-task-progress{display:flex;align-items:center;gap:6px;margin-top:4px;}
+.exec-task-progress-bar{width:50px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.exec-task-progress-fill{height:100%;background:var(--cyan);border-radius:2px;animation:progress-sweep 1.5s ease-in-out infinite;}
+@keyframes progress-sweep{0%{width:0}50%{width:100%}100%{width:0}}
+.exec-task-progress-text{font-size:10px;color:var(--cyan);font-family:'IBM Plex Mono',monospace;}
+.exec-output{background:rgba(0,196,232,.04);border:1px solid rgba(0,196,232,.15);border-radius:10px;padding:14px;margin-top:12px;}
+.exec-output-title{font-size:11px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+.exec-output-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;}
+.exec-output-label{font-size:10px;color:var(--text3);text-transform:capitalize;}
+.exec-output-value{font-size:12px;font-weight:600;margin-top:1px;}
+.exec-run-agent-btn{margin-top:12px;width:100%;padding:10px;border-radius:9px;border:1.5px solid var(--cyan);background:rgba(0,196,232,.08);color:var(--cyan);font-size:13px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s;}
+.exec-run-agent-btn:hover{background:rgba(0,196,232,.15);}
+
+.agents-exec-log-panel{border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;background:var(--surface);}
+.exec-log-title{padding:12px 14px;font-size:11.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);}
+.exec-log-body{flex:1;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:2px;}
+.exec-log-empty{text-align:center;padding:30px 10px;color:var(--text3);font-size:12px;}
+.exec-log-item{font-size:11px;padding:3px 6px;border-radius:5px;animation:slideIn .3s ease;}
+.exec-log-item:last-child{background:rgba(255,255,255,.02);}
+.exec-log-ts{color:var(--text3);margin-right:5px;font-size:10px;font-family:'IBM Plex Mono',monospace;}
+@keyframes slideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
 /* ══════════════════════════════════════
    LEILÃO VIEW
@@ -1173,29 +1223,34 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
 
       <!-- ── AGENTS VIEW ── -->
       <div class="view" id="view-agents">
-        <div class="agents-layout">
-          <div class="agents-list-panel">
-            <div class="agents-list-header">
-              <div class="agents-list-title">🤖 Agentes Ativos</div>
-              <div class="agents-list-sub">8 agentes monitorando o portfólio</div>
+        <div class="agents-exec-layout">
+          <!-- Left: Agent Cards -->
+          <div class="agents-exec-sidebar">
+            <div class="agents-exec-vehicle" id="exec-vehicle-card"></div>
+            <div class="agents-exec-mode-bar">
+              <button class="exec-mode-btn active" id="mode-pipeline" onclick="setExecMode('pipeline')">🔗 Pipeline Completo</button>
+              <button class="exec-mode-btn" id="mode-single" onclick="setExecMode('single')">🤖 Agente Individual</button>
             </div>
-            <div class="agents-list-body" id="agents-list"></div>
+            <div class="agents-exec-list-title">Agentes de IA (8)</div>
+            <div class="agents-exec-list" id="agents-exec-list"></div>
           </div>
-          <div class="agent-console" id="agent-console">
-            <div class="console-header">
-              <span class="console-agent-icon" id="console-icon">🧠</span>
-              <div>
-                <div class="console-agent-name" id="console-name">Supervisor Agent</div>
-                <div class="console-agent-desc" id="console-desc">Orquestra todos os agentes. Escala exceções.</div>
-              </div>
-              <div class="console-status-pill running" id="console-pill">● Ativo</div>
+          <!-- Center: Execution -->
+          <div class="agents-exec-center">
+            <!-- Pipeline Bar -->
+            <div class="agents-exec-pipeline-bar">
+              <div class="pipeline-mini" id="pipeline-mini"></div>
+              <div class="pipeline-actions" id="pipeline-actions"></div>
             </div>
-            <div class="console-msgs" id="console-msgs"></div>
-            <div class="console-input-area">
-              <div class="console-context-select" id="context-chips"></div>
-              <div class="console-input-row">
-                <textarea class="console-input" id="console-input" placeholder="Pergunte ao agente... ex: 'Quais casos precisam de atenção urgente hoje?'" rows="2" onkeydown="handleConsoleKey(event)"></textarea>
-                <button class="console-send" onclick="sendToAgent()" id="console-send-btn">Enviar</button>
+            <!-- KPIs -->
+            <div class="agents-exec-kpis" id="exec-kpis"></div>
+            <!-- Detail + Log -->
+            <div class="agents-exec-detail-area">
+              <div class="agents-exec-task-panel" id="exec-task-panel"></div>
+              <div class="agents-exec-log-panel">
+                <div class="exec-log-title">📋 Log de Execução (<span id="log-count">0</span>)</div>
+                <div class="exec-log-body" id="exec-log-body">
+                  <div class="exec-log-empty">Clique "Executar Pipeline" para iniciar</div>
+                </div>
               </div>
             </div>
           </div>
@@ -1452,15 +1507,32 @@ const STAGES = [
 ];
 
 const AGENTS_DEF = [
-  {id:'supervisor',  name:'Supervisor Agent',       icon:'🧠', desc:'Orquestra todos os agentes. Escala exceções e aprende com o histórico.',        status:'running', tasks:'14 ações hoje', prompt:'Você é o Supervisor Agent de uma plataforma de gestão de BNDU (Bens Não de Uso) de um banco brasileiro. Você monitora o portfólio completo, identifica gargalos, escalona exceções e orquestra os demais agentes especializados. Responda em português, seja preciso, cite números e casos específicos quando relevante.'},
-  {id:'risk',        name:'Risk Monitoring Agent',  icon:'🔍', desc:'Monitora contratos, score de risco e decide quando escalar para B&A.',           status:'running', tasks:'3 alertas ativos', prompt:'Você é o Risk Monitoring Agent. Sua função é analisar o risco de inadimplência e recuperação de veículos financiados. Avalie scores, histórico de pagamento e valor dos ativos. Responda em português.'},
-  {id:'negotiation', name:'Negotiation Agent',      icon:'🤝', desc:'Contato automatizado via WhatsApp/e-mail. Propõe renegociação.',                  status:'running', tasks:'8 contatos hoje', prompt:'Você é o Negotiation Agent. Você gerencia a comunicação com devedores inadimplentes, propõe acordos e renegociações. Seja estratégico e pragmático. Responda em português.'},
-  {id:'legal',       name:'Legal Strategy Agent',   icon:'⚖️', desc:'Monitora PJe e tribunais. Detecta liminares e aciona logística.',                status:'running', tasks:'2 liminares hoje', prompt:'Você é o Legal Strategy Agent. Você monitora processos judiciais no PJe, acompanha liminares de busca e apreensão e coordena com a logística. Conheça a legislação brasileira (Decreto-Lei 911/69, Lei 14.711/23). Responda em português.'},
-  {id:'recovery',    name:'Recovery Ops Agent',     icon:'🚛', desc:'Coordena reboque, entrada em pátio e registro de custódia.',                     status:'idle',    tasks:'Aguardando apreensões', prompt:'Você é o Recovery Ops Agent. Você coordena a logística de recuperação física de veículos: reboques, pátios e vistoria de entrada. Responda em português.'},
-  {id:'document',    name:'Document Agent',          icon:'📄', desc:'Valida documentos, CRV, chassis e processa transferências via DETRAN.',          status:'running', tasks:'5 CRVs pendentes', prompt:'Você é o Document Intelligence Agent. Você processa documentação de veículos: CRV, CRLV, laudo de vistoria, emissão de NF-e e comunicações com cartórios e DETRANs. Responda em português.'},
-  {id:'pricing',     name:'Pricing & Valuation Agent', icon:'💰', desc:'Consulta FIPE, OLX, Webmotors. Define lance mínimo com dados reais.',          status:'running', tasks:'12 avaliações hoje', prompt:'Você é o Pricing & Valuation Agent. Você determina o valor de mercado de veículos recuperados consultando FIPE, OLX Autos e Webmotors. Calcule lances mínimos estratégicos para maximizar recuperação. Responda em português.'},
-  {id:'auction',     name:'Auction Strategy Agent', icon:'🔨', desc:'Publica em múltiplos leiloeiros via API. Monitora lances e arremates.',           status:'alert',   tasks:'1 lote sem lance', prompt:'Você é o Auction Strategy Agent. Você gerencia a estratégia de leilões de veículos recuperados: seleção de leiloeiros, publicação de lotes e análise de resultados. Responda em português.'}
+  {id:'legal',      name:'Legal Agent',      icon:'⚖️', subtitle:'Agente Jurídico',       color:'#1a3a5c', accent:'#3b82f6', desc:'Monitora PJe, detecta liminares e aciona logística automaticamente.',  status:'running', tasks:'2 liminares hoje', impact:'−5 a −7 dias', trigger:'Liminar deferida no PJe', stakeholder:'Reboque + Devedor + Analista', prompt:'Você é o Legal Agent do BNDU.ia. Monitora despachos judiciais no PJe, interpreta semanticamente decisões, dispara ações automáticas ao detectar liminar deferida. Responda em português.', execTasks:[
+    {label:'Monitorando despachos no PJe...',duration:2200,icon:'🔍'},{label:'Liminar deferida detectada — Proc. 0012345-67.2026.8.26.0100',duration:1800,icon:'📄'},{label:'Interpretação semântica: DEFERIDA busca e apreensão',duration:1500,icon:'🧠'},{label:'Extraindo endereço do bem da petição...',duration:1200,icon:'📍'},{label:'Atualizando VIN 360 → status: LIMINAR_DEFERIDA',duration:800,icon:'🚗'},{label:'Gerando minuta de mandado para revisão',duration:1400,icon:'📝'},{label:'✅ Acionando Logistics Agent para coordenar reboque',duration:600,icon:'🚛'}
+  ], output:{tipo:'Liminar Deferida',processo:'0012345-67.2026.8.26.0100',vara:'3ª Vara Cível — Foro Central SP',endereco:'Rua Augusta, 1200 — Consolação, SP'}, nextAgent:'logistics'},
+  {id:'logistics',  name:'Logistics Agent',  icon:'🚛', subtitle:'Agente de Logística',    color:'#1a4a3a', accent:'#10b981', desc:'Coordena reboque, rastreia GPS e confirma entrada no pátio.',            status:'running', tasks:'3 OS ativas',       impact:'−3 a −5 dias', trigger:'OS de apreensão criada',               stakeholder:'Reboque / Pátio',            prompt:'Você é o Logistics Agent do BNDU.ia. Coordena logística de apreensão: seleção de reboque, envio de OS, rastreamento GPS e check-in no pátio. Responda em português.', execTasks:[
+    {label:'OS recebida do Legal Agent — Mandado anexo',duration:800,icon:'📋'},{label:'Calculando reboques disponíveis na região...',duration:1600,icon:'📍'},{label:'Reboque selecionado: TransLog SP (3.2km, rating 4.8)',duration:1200,icon:'🚛'},{label:'Enviando OS + mandado via WhatsApp Hub...',duration:1000,icon:'💬'},{label:'Confirmação recebida — ETA: 45 min',duration:1400,icon:'✅'},{label:'Rastreando GPS do reboque em tempo real...',duration:2000,icon:'🛰️'},{label:'Geofencing: veículo deu entrada no Pátio Central SP',duration:1200,icon:'📍'},{label:'✅ Acionando Compliance Agent para vistoria',duration:600,icon:'✅'}
+  ], output:{reboque:'TransLog SP — Placa FGH-4567',tempoResposta:'45 min',patio:'Pátio Central SP — Guarulhos',checkin:'06/05/2026 14:32'}, nextAgent:'compliance'},
+  {id:'compliance', name:'Compliance Agent', icon:'✅', subtitle:'Agente de Conformidade', color:'#3a1a5c', accent:'#8b5cf6', desc:'Valida chassi via OCR, confere laudo e libera para sanitização.',        status:'running', tasks:'5 vistorias hoje',   impact:'−2 a −4 dias', trigger:'Veículo registrado no pátio',          stakeholder:'Analista BNDU / Pátio',      prompt:'Você é o Compliance Agent do BNDU.ia. Valida integridade do ativo no pátio: confronta chassi via OCR, verifica laudos e libera para sanitização. Responda em português.', execTasks:[
+    {label:'Veículo registrado — iniciando vistoria automática',duration:1000,icon:'📋'},{label:'OCR processando chassi: 9BWZZZ377VT004251',duration:1800,icon:'🔍'},{label:'Confrontando chassi com contrato #FC-2024-00891...',duration:1200,icon:'🔗'},{label:'✅ Chassi confere — sem divergências',duration:800,icon:'✅'},{label:'Analisando laudo de vistoria (23 itens)...',duration:2000,icon:'📄'},{label:'Laudo completo — 2 avarias leves identificadas',duration:1000,icon:'📊'},{label:'✅ Veículo liberado para sanitização tributária',duration:600,icon:'🟢'}
+  ], output:{chassi:'9BWZZZ377VT004251',status:'CONFORME',avarias:'2 leves (para-choque, retrovisor)',laudoScore:'87/100'}, nextAgent:'tax'},
+  {id:'tax',        name:'Tax Agent',        icon:'💳', subtitle:'Agente Tributário',      color:'#5c3a1a', accent:'#f59e0b', desc:'Sanitiza débitos em 27 estados via RPA e confirma baixa Renajud.',     status:'running', tasks:'4 sanitizações',    impact:'−10 a −16 dias', trigger:'Vistoria aprovada; débitos pendentes', stakeholder:'Analista BNDU',              prompt:'Você é o Tax Agent do BNDU.ia. Coordena sanitização de débitos tributários em 27 estados via RPA, gera guias e confirma baixa no Renajud. Responda em português.', execTasks:[
+    {label:'Consultando débitos em 27 estados via RPA...',duration:2500,icon:'🤖'},{label:'IPVA 2025/2026 — R$ 2.847,00 (SP)',duration:800,icon:'💰'},{label:'Multas — 3 infrações — R$ 1.290,00',duration:800,icon:'📋'},{label:'Licenciamento 2026 — R$ 312,00',duration:600,icon:'📄'},{label:'Total consolidado: R$ 4.449,00',duration:1000,icon:'🧮'},{label:'Gerando guias de pagamento via API bancária...',duration:1600,icon:'🏦'},{label:'Pagamento processado — aguardando baixa Renajud...',duration:2200,icon:'⏳'},{label:'✅ Renajud: restrições removidas — veículo livre',duration:1000,icon:'🔓'}
+  ], output:{totalDebitos:'R$ 4.449,00',ipva:'R$ 2.847,00',multas:'R$ 1.290,00',renajud:'LIVRE'}, nextAgent:'pricing'},
+  {id:'pricing',    name:'Pricing Agent',    icon:'📈', subtitle:'Agente de Precificação', color:'#1a3a5c', accent:'#06b6d4', desc:'Calcula preço ótimo com FIPE, conservação, histórico e sazonalidade.', status:'running', tasks:'12 avaliações hoje', impact:'−1 a −2 dias', trigger:'Débitos zerados; veículo liberado',     stakeholder:'Analista BNDU / Gestor',     prompt:'Você é o Pricing Agent do BNDU.ia. Calcula preço de reserva combinando FIPE, estado de conservação, histórico de leilões e sazonalidade. Responda em português.', execTasks:[
+    {label:'Consultando tabela FIPE maio/2026...',duration:1200,icon:'📊'},{label:'FIPE referência: R$ 78.500 (VW Polo 1.0 TSI 2022)',duration:800,icon:'💰'},{label:'Aplicando fator de conservação: 87/100 → −8%',duration:1000,icon:'🔧'},{label:'Analisando histórico de leilões similares (90d)...',duration:1600,icon:'📈'},{label:'Fator sazonalidade maio: +2.3%',duration:800,icon:'📅'},{label:'Modelo ML: preço ótimo com IC 95%',duration:1400,icon:'🧠'},{label:'✅ Preço de reserva definido: R$ 62.400',duration:600,icon:'🏷️'}
+  ], output:{fipe:'R$ 78.500',fatorConservacao:'−8%',precoReserva:'R$ 62.400',intervaloConfianca:'R$ 58.900 — R$ 65.200'}, nextAgent:'auction'},
+  {id:'auction',    name:'Auction Agent',    icon:'🔨', subtitle:'Agente de Leilão',       color:'#5c1a1a', accent:'#ef4444', desc:'Aciona leiloeiras simultâneas, monitora lances e confirma arrematação.',status:'alert',   tasks:'1 lote sem lance',  impact:'−4 a −6 dias', trigger:'Precificação concluída',               stakeholder:'Até 5 leiloeiras',           prompt:'Você é o Auction Agent do BNDU.ia. Verifica elegibilidade, aciona leiloeiras simultaneamente, monitora lances em tempo real e confirma arrematação. Responda em português.', execTasks:[
+    {label:'Verificando elegibilidade: débitos ✅ docs ✅ preço ✅',duration:1000,icon:'✅'},{label:'Acionando 3 leiloeiras simultaneamente via Hub...',duration:1200,icon:'📡'},{label:'→ Copart SP: aceite recebido ✅',duration:1400,icon:'🏢'},{label:'→ Sodré Santoro: aceite recebido ✅',duration:1000,icon:'🏢'},{label:'→ Superbid: aceite recebido ✅ (first-confirm wins)',duration:800,icon:'🏆'},{label:'Lote publicado — Leilão: 12/05/2026 14:00',duration:1600,icon:'📅'},{label:'Monitorando lances em tempo real...',duration:2200,icon:'💸'},{label:'Lance vencedor: R$ 67.800 — Arrematante #4421',duration:1000,icon:'🎯'},{label:'✅ Arrematação confirmada → Acionando Document Agent',duration:600,icon:'📄'}
+  ], output:{leiloeira:'Superbid (first-confirm)',lanceVencedor:'R$ 67.800',arrematante:'ID #4421',margem:'+8.7% sobre reserva'}, nextAgent:'document'},
+  {id:'document',   name:'Document Agent',   icon:'📄', subtitle:'Agente Documental',      color:'#1a4a4a', accent:'#14b8a6', desc:'Notifica arrematante, transfere CRV e encerra o VIN 360.',             status:'running', tasks:'5 CRVs pendentes',  impact:'−2 a −3 dias', trigger:'Arrematante identificado',             stakeholder:'Comprador + Despachante',    prompt:'Você é o Document Agent do BNDU.ia. Gerencia pós-venda: notifica arrematante, coordena despachante, acompanha CRV e processa baixa contábil. Responda em português.', execTasks:[
+    {label:'Notificando arrematante via WhatsApp Hub...',duration:1000,icon:'💬'},{label:'Documentação de transferência gerada',duration:1400,icon:'📋'},{label:'Despachante acionado: Desp. Rápido LTDA',duration:1200,icon:'👤'},{label:'Solicitação de transferência enviada ao Detran-SP...',duration:1800,icon:'🏛️'},{label:'CRV emitido em nome do arrematante',duration:2000,icon:'📄'},{label:'Baixa contábil processada no sistema de crédito',duration:1200,icon:'🏦'},{label:'✅ VIN 360 encerrado — caso concluído',duration:800,icon:'🏁'}
+  ], output:{transferencia:'CRV emitido — Detran-SP',despachante:'Desp. Rápido LTDA',statusFinal:'CONCLUÍDO'}, nextAgent:null},
+  {id:'supervisor', name:'Supervisor Agent', icon:'🔍', subtitle:'Agente Supervisor',      color:'#4a1a4a', accent:'#d946ef', desc:'Monitora SLAs, classifica exceções e escala para humano.',             status:'running', tasks:'14 ações hoje',     impact:'−1 a −2 dias', trigger:'SLA violado / exceção detectada',      stakeholder:'Gestor / Analista',          prompt:'Você é o Supervisor Agent do BNDU.ia. Monitora SLAs de todos os agentes, classifica exceções por severidade, tenta resolução automática e escala para humano nos casos críticos. Responda em português.', execTasks:[
+    {label:'Monitorando SLAs de todos os 7 agentes...',duration:1500,icon:'👁️'},{label:'⚠️ Alerta: Tax Agent excedeu SLA (>48h em sanitização)',duration:1200,icon:'🚨'},{label:'Classificando exceção: SEVERIDADE MÉDIA',duration:800,icon:'📊'},{label:'Tentando resolução automática: re-consulta Detran-MG...',duration:2000,icon:'🤖'},{label:'Detran-MG respondeu — débito já quitado (lag do sistema)',duration:1400,icon:'✅'},{label:'Atualizando guardrails com novo padrão aprendido',duration:1000,icon:'🧠'},{label:'✅ Exceção resolvida automaticamente — SLA normalizado',duration:600,icon:'🟢'}
+  ], output:{alertas:'1 exceção detectada',severidade:'MÉDIA',resolucao:'Automática (re-consulta Detran)',aprendizado:'Lag Detran-MG → guardrails'}, nextAgent:null}
 ];
+const PIPELINE_ORDER = ['legal','logistics','compliance','tax','pricing','auction','document'];
 
 const now = new Date();
 function daysAgo(n){ const d=new Date(now); d.setDate(d.getDate()-n); return d.toISOString().split('T')[0];}
@@ -1716,7 +1788,7 @@ let STATE = {
 };
 
 // Agent conversation histories per agent
-AGENTS_DEF.forEach(a => { STATE.agentMessages[a.id] = []; });
+AGENTS_DEF.forEach(a => { STATE.agentMessages[a.id] = []; }); /* agent messages for chat fallback */
 
 const ROLE_NAMES = {gestor:'Ana Carvalho',analista:'Pedro Santos',campo:'Lucas Oliveira',leiloeiro:'Juliana Leal'};
 const ROLE_LABELS = {gestor:'Gestora',analista:'Analista BNDU',campo:'Agente de Campo',leiloeiro:'Leiloeiro Oficial'};
@@ -1893,7 +1965,7 @@ function renderDashboard(){
   const agentsStatusHTML=AGENTS_DEF.map(a=>`
     <div class="agent-status-item" onclick="openAgent('${a.id}')">
       <div class="agent-dot ${a.status}"></div>
-      <div class="agent-status-name">${a.name}</div>
+      <div class="agent-status-name">${a.icon} ${a.name}</div>
       <div class="agent-status-tasks">${a.tasks}</div>
     </div>`).join('');
 
@@ -2466,183 +2538,278 @@ function escalateCase(id){
 }
 
 function askAgentAboutCase(id){
-  closePanel();
   navigate('agents');
-  const c=CASES.find(x=>x.id===id);
-  setTimeout(()=>{
-    document.getElementById('console-input').value=`Analise o caso ${id} — ${c.veiculo.marca} ${c.veiculo.modelo} (${c.veiculo.placa}), devedor ${c.devedor.nome.split(' ')[0]}, dívida ${fmtCurrency(c.valorDivida)}, fase atual: ${STAGES.find(s=>s.id===c.stage)?.label}. Qual é a melhor estratégia?`;
-    document.getElementById('console-input').focus();
-  },300);
+  setTimeout(()=>execSelectAgent('supervisor'),100);
 }
 
 // ══════════════════════════════════════
-//  AI AGENTS
+//  AI AGENTS — EXECUTION DEMO
 // ══════════════════════════════════════
+const SAMPLE_VEHICLE = {placa:'ABC-1D23',modelo:'VW Polo 1.0 TSI',ano:'2022/2023',cor:'Prata',chassi:'9BWZZZ377VT004251',contrato:'FC-2024-00891',devedor:'Carlos M. Silva',divida:'R$ 45.230,00'};
+let execState = {mode:'pipeline',running:false,pipelineDone:false,selectedAgent:'legal',activeAgent:null,agentStates:{},completedTasks:{},outputs:{},globalLog:[],elapsedDays:0,aborted:false};
+AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
+
 function renderAgents(){
-  const listEl=document.getElementById('agents-list');
-  listEl.innerHTML=AGENTS_DEF.map(a=>`
-    <div class="agent-card-item ${a.id===STATE.selectedAgent?'active':''}" onclick="selectAgent('${a.id}')" id="agent-item-${a.id}">
-      <div class="agent-card-icon">${a.icon}</div>
-      <div class="agent-card-name">${a.name}</div>
-      <div class="agent-card-status ${a.status}">
-        <span style="width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;${a.status==='running'||a.status==='alert'?'animation:pulse 1.5s infinite;':''}"></span>
-        ${a.status==='running'?'Executando':a.status==='alert'?'Atenção Requerida':'Aguardando'}
+  renderExecVehicle();
+  renderExecList();
+  renderExecPipeline();
+  renderExecKPIs();
+  renderExecTaskPanel();
+  renderExecLog();
+  renderExecActions();
+}
+
+function renderExecVehicle(){
+  const el=document.getElementById('exec-vehicle-card');
+  if(!el) return;
+  const v=SAMPLE_VEHICLE;
+  el.innerHTML=`<div class="exec-veh-header"><span style="font-size:24px">🚗</span><div><div class="exec-veh-title">${v.modelo}</div><div class="exec-veh-sub">${v.placa} · ${v.ano} · ${v.cor}</div></div></div><div class="exec-veh-grid"><div><div class="exec-veh-label">Chassi</div><div class="exec-veh-value">${v.chassi}</div></div><div><div class="exec-veh-label">Contrato</div><div class="exec-veh-value">${v.contrato}</div></div><div><div class="exec-veh-label">Devedor</div><div class="exec-veh-value">${v.devedor}</div></div><div><div class="exec-veh-label">Dívida</div><div class="exec-veh-value">${v.divida}</div></div></div>`;
+}
+
+function renderExecList(){
+  const el=document.getElementById('agents-exec-list');
+  if(!el) return;
+  el.innerHTML=AGENTS_DEF.map(a=>{
+    const st=execState.agentStates[a.id];
+    const pct=a.execTasks?((execState.completedTasks[a.id]||0)/a.execTasks.length*100):0;
+    const isActive=execState.selectedAgent===a.id;
+    return `<div class="exec-agent-card ${isActive?'active':''} ${st}" onclick="execSelectAgent('${a.id}')" style="${st==='running'?'border-color:'+(a.accent||'var(--cyan)'):st==='done'?'border-color:var(--green)':''}">
+      <div class="exec-agent-card-inner">
+        <div class="exec-agent-icon">${a.icon}</div>
+        <div class="exec-agent-info"><div class="exec-agent-name">${a.name}</div><div class="exec-agent-impact">${a.impact||''}</div></div>
+        <div class="exec-agent-dot ${st}"></div>
       </div>
-      <div class="agent-card-tasks">${a.tasks}</div>
-    </div>`).join('');
-  
-  selectAgent('supervisor');
+      ${st==='running'?`<div class="exec-agent-progress" style="width:${pct}%;background:${a.accent||'var(--cyan)'}"></div>`:''}
+    </div>`;
+  }).join('');
 }
 
-function selectAgent(agentId){
-  STATE.selectedAgent=agentId;
-  document.querySelectorAll('.agent-card-item').forEach(el=>el.classList.remove('active'));
-  const el=document.getElementById('agent-item-'+agentId);
-  if(el) el.classList.add('active');
-  
+function renderExecPipeline(){
+  const el=document.getElementById('pipeline-mini');
+  if(!el) return;
+  el.innerHTML=PIPELINE_ORDER.map((id,i)=>{
+    const a=AGENTS_DEF.find(x=>x.id===id);
+    const st=execState.agentStates[id];
+    const isAct=execState.activeAgent===id;
+    const cls=isAct?'lg':'sm';
+    const stCls=st==='done'?'done':st==='running'?'running':'';
+    const link=i<PIPELINE_ORDER.length-1?`<div class="pipeline-link ${execState.agentStates[PIPELINE_ORDER[i+1]]!=='idle'?'active':''}"></div>`:'';
+    return `<div class="pipeline-node ${cls} ${stCls}" title="${a?.name}">${a?.icon}</div>${link}`;
+  }).join('');
+}
+
+function renderExecKPIs(){
+  const el=document.getElementById('exec-kpis');
+  if(!el) return;
+  const running=Object.values(execState.agentStates).filter(s=>s==='running').length;
+  const totalDone=Object.values(execState.completedTasks).reduce((a,b)=>a+b,0);
+  const totalAll=AGENTS_DEF.reduce((a,b)=>a+(b.execTasks?b.execTasks.length:0),0);
+  const done=Object.values(execState.agentStates).filter(s=>s==='done').length;
+  el.innerHTML=`
+    <div class="exec-kpi"><div class="exec-kpi-val" style="color:var(--cyan)">${running}</div><div class="exec-kpi-label">Agentes Ativos</div></div>
+    <div class="exec-kpi"><div class="exec-kpi-val" style="color:var(--green)">${totalDone}</div><div class="exec-kpi-label">Tarefas Concluídas</div><div class="exec-kpi-sub" style="color:var(--text3)">de ${totalAll}</div></div>
+    <div class="exec-kpi"><div class="exec-kpi-val" style="color:var(--amber)">${execState.elapsedDays}</div><div class="exec-kpi-label">Dias Economizados</div><div class="exec-kpi-sub" style="color:var(--text3)">vs. processo manual</div></div>
+    <div class="exec-kpi"><div class="exec-kpi-val" style="color:#8b5cf6">${done}</div><div class="exec-kpi-label">Fases Completas</div><div class="exec-kpi-sub" style="color:var(--text3)">de ${AGENTS_DEF.length}</div></div>`;
+}
+
+function renderExecTaskPanel(){
+  const el=document.getElementById('exec-task-panel');
+  if(!el) return;
+  const a=AGENTS_DEF.find(x=>x.id===execState.selectedAgent);
+  if(!a) return;
+  const st=execState.agentStates[a.id];
+  const completed=execState.completedTasks[a.id]||0;
+  const tasks=a.execTasks||[];
+  const output=execState.outputs[a.id];
+  const accentColor=a.accent||'var(--cyan)';
+
+  let tasksHTML=tasks.map((t,i)=>{
+    const isDone=i<completed;
+    const isAct=i===completed && st==='running';
+    return `<div class="exec-task-item ${isDone?'done':isAct?'active':'pending'}">
+      <div class="exec-task-item-icon">${t.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div class="exec-task-item-label">${t.label}</div>
+        ${isDone?'<div class="exec-task-done-tag">concluído</div>':''}
+        ${isAct?`<div class="exec-task-progress"><div class="exec-task-progress-bar"><div class="exec-task-progress-fill"></div></div><span class="exec-task-progress-text">processando...</span></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  let outputHTML='';
+  if(output){
+    const entries=Object.entries(output).filter(([k])=>k!=='proximo');
+    outputHTML=`<div class="exec-output"><div class="exec-output-title">Resultado</div><div class="exec-output-grid">${entries.map(([k,v])=>`<div><div class="exec-output-label">${k.replace(/([A-Z])/g,' $1')}</div><div class="exec-output-value">${v}</div></div>`).join('')}</div></div>`;
+  }
+
+  const pillCls=st==='running'?'running':st==='done'?'done':'idle';
+  const pillText=st==='running'?'Executando':st==='done'?'Concluído':st==='waiting'?'Aguardando':'Idle';
+
+  let actionBtn='';
+  if(execState.mode==='single' && !execState.running && st==='idle'){
+    actionBtn=`<button class="exec-run-agent-btn" onclick="execRunSingle('${a.id}')" style="border-color:${accentColor};color:${accentColor}">▶ Executar ${a.name}</button>`;
+  }
+
+  el.innerHTML=`
+    <div class="exec-task-header">
+      <div class="exec-task-icon">${a.icon}</div>
+      <div><div class="exec-task-title">${a.name}</div><div class="exec-task-subtitle" style="color:${accentColor}">${a.subtitle||''}</div></div>
+      <div class="exec-task-pill ${pillCls}" style="${st==='running'?'border-color:'+accentColor+';color:'+accentColor:''}">${pillText}</div>
+    </div>
+    <div class="exec-task-meta">
+      <div class="exec-task-meta-item"><div class="exec-task-meta-label">Trigger</div><div class="exec-task-meta-value">${a.trigger||'—'}</div></div>
+      <div class="exec-task-meta-item"><div class="exec-task-meta-label">Stakeholder</div><div class="exec-task-meta-value">${a.stakeholder||'—'}</div></div>
+      <div class="exec-task-meta-item"><div class="exec-task-meta-label">Impacto</div><div class="exec-task-meta-value" style="color:${accentColor}">${a.impact||'—'}</div></div>
+    </div>
+    <div class="exec-task-list-title">Execução de Tarefas (${completed}/${tasks.length})</div>
+    <div class="exec-task-list">${tasksHTML}</div>
+    ${outputHTML}
+    ${actionBtn}`;
+}
+
+function renderExecLog(){
+  const el=document.getElementById('exec-log-body');
+  const countEl=document.getElementById('log-count');
+  if(!el) return;
+  if(countEl) countEl.textContent=execState.globalLog.length;
+  if(execState.globalLog.length===0){
+    el.innerHTML=`<div class="exec-log-empty">${execState.mode==='pipeline'?'Clique "Executar Pipeline" para iniciar':'Clique em um agente para executar'}</div>`;
+    return;
+  }
+  el.innerHTML=execState.globalLog.map((l,i)=>{
+    const agent=l.agentId?AGENTS_DEF.find(a=>a.id===l.agentId):null;
+    const color=agent?(agent.accent||'var(--cyan)'):'var(--text)';
+    return `<div class="exec-log-item"><span class="exec-log-ts">${l.ts}</span><span style="color:${color}">${l.msg}</span></div>`;
+  }).join('');
+  el.scrollTop=el.scrollHeight;
+}
+
+function renderExecActions(){
+  const el=document.getElementById('pipeline-actions');
+  if(!el) return;
+  let html='';
+  if(execState.pipelineDone) html+=`<span class="exec-done-label">✅ Ciclo Completo!</span>`;
+  if(execState.mode==='pipeline'){
+    if(execState.running){
+      html+=`<button class="exec-run-btn stop" onclick="execStop()">⏹ Parar</button>`;
+    } else {
+      html+=`<button class="exec-run-btn" onclick="execRunPipeline()">▶ Executar Pipeline</button>`;
+    }
+  }
+  el.innerHTML=html;
+}
+
+function execSelectAgent(id){
+  execState.selectedAgent=id;
+  if(execState.mode==='single' && !execState.running && execState.agentStates[id]==='idle'){
+    // just select, user clicks button to run
+  }
+  renderExecList();
+  renderExecTaskPanel();
+}
+
+function setExecMode(mode){
+  execState.mode=mode;
+  document.getElementById('mode-pipeline')?.classList.toggle('active',mode==='pipeline');
+  document.getElementById('mode-single')?.classList.toggle('active',mode==='single');
+  renderExecActions();
+  renderExecTaskPanel();
+  renderExecLog();
+}
+
+function execAddLog(msg,agentId){
+  const ts=new Date().toLocaleTimeString('pt-BR');
+  execState.globalLog.push({ts,msg,agentId});
+  if(execState.globalLog.length>100) execState.globalLog.shift();
+  renderExecLog();
+}
+
+function execSleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+async function execRunAgent(agentId){
   const agent=AGENTS_DEF.find(a=>a.id===agentId);
-  if(!agent) return;
-  
-  document.getElementById('console-icon').textContent=agent.icon;
-  document.getElementById('console-name').textContent=agent.name;
-  document.getElementById('console-desc').textContent=agent.desc;
-  document.getElementById('console-pill').textContent=agent.status==='running'?'● Ativo':agent.status==='alert'?'⚠ Atenção':'○ Aguardando';
-  document.getElementById('console-pill').className='console-status-pill '+(agent.status==='running'?'running':'idle');
-  
-  // Context chips
-  const chips=['Todo o portfólio','Alta prioridade','Em leilão','Casos atrasados','Esta semana'];
-  document.getElementById('context-chips').innerHTML=chips.map(c=>`<div class="context-chip" onclick="toggleChip(this)">${c}</div>`).join('');
-  
-  // Load conversation
-  renderAgentMessages(agentId);
-  
-  // Add welcome message if first time
-  if(STATE.agentMessages[agentId].length===0){
-    const welcomeMsgs={
-      supervisor:`Olá! Sou o **Supervisor Agent** da plataforma BNDU.ia.\n\nEstou monitorando o portfólio de ${CASES.length} casos ativos. Identifico os seguintes pontos críticos agora:\n\n🔴 **${CASES.filter(c=>c.prioridade==='alta').length} casos** de alta prioridade requerem atenção\n⚡ **${CASES.filter(c=>c.stage==='inadimplencia').length} contratos** em fase inicial de inadimplência\n🔨 **${CASES.filter(c=>['leilao','avaliacao'].includes(c.stage)).length} ativos** em fase de leilão/avaliação\n\nComo posso ajudá-lo hoje?`,
-      pricing:`Olá! Sou o **Pricing Agent**.\n\nAnaliso preços de ${CASES.filter(c=>['avaliacao','leilao'].includes(c.stage)).length} veículos para leilão.\n\nValor FIPE médio da carteira: ${fmtCurrency(CASES.reduce((s,c)=>s+c.fipe,0)/CASES.length)}\nLance mínimo médio recomendado: ${fmtCurrency(CASES.reduce((s,c)=>s+c.fipe*0.8,0)/CASES.length)}\n\nPergunte sobre precificação de qualquer veículo!`,
-      legal:`Olá! Sou o **Legal Strategy Agent**.\n\nMonitoro ${CASES.filter(c=>['execucao','retomada'].includes(c.stage)).length} processos judiciais ativos.\n\n📋 Marco Legal das Garantias (Lei 14.711/23): Posso orientar sobre busca e apreensão extrajudicial!\n\nConsulte-me sobre estratégias jurídicas ou status de processos.`
-    };
-    const msg=welcomeMsgs[agentId]||`Olá! Sou o **${agent.name}**.\n\n${agent.desc}\n\nComo posso ajudá-lo com o portfólio BNDU?`;
-    STATE.agentMessages[agentId].push({role:'assistant',text:msg,time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});
-    renderAgentMessages(agentId);
+  if(!agent||!agent.execTasks) return;
+  execState.agentStates[agentId]='running';
+  execState.activeAgent=agentId;
+  execState.selectedAgent=agentId;
+  renderExecList();renderExecPipeline();renderExecTaskPanel();renderExecKPIs();
+  execAddLog(`▶ ${agent.name} iniciado — Trigger: ${agent.trigger}`,agentId);
+
+  for(let i=0;i<agent.execTasks.length;i++){
+    if(execState.aborted) return;
+    execState.completedTasks[agentId]=i;
+    renderExecList();renderExecTaskPanel();renderExecKPIs();
+    execAddLog(`${agent.icon} ${agent.execTasks[i].label}`,agentId);
+    await execSleep(agent.execTasks[i].duration*0.55);
   }
+
+  execState.completedTasks[agentId]=agent.execTasks.length;
+  execState.agentStates[agentId]='done';
+  execState.outputs[agentId]=agent.output;
+  const impactMatch=(agent.impact||'').match(/(\d+)/);
+  execState.elapsedDays+=parseInt(impactMatch?impactMatch[1]:'3');
+  execAddLog(`✅ ${agent.name} concluído — Impacto: ${agent.impact}`,agentId);
+  renderExecList();renderExecPipeline();renderExecTaskPanel();renderExecKPIs();
 }
 
-function toggleChip(el){ el.classList.toggle('active'); }
+async function execRunPipeline(){
+  execState.aborted=false;
+  execState.running=true;
+  execState.pipelineDone=false;
+  execState.elapsedDays=0;
+  execState.outputs={};
+  execState.globalLog=[];
+  AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
+  renderExecActions();renderExecList();renderExecPipeline();renderExecKPIs();renderExecLog();
 
-function renderAgentMessages(agentId){
-  const msgs=STATE.agentMessages[agentId]||[];
-  const msgsEl=document.getElementById('console-msgs');
-  msgsEl.innerHTML=msgs.map(m=>`
-    <div class="msg ${m.role==='user'?'user':'ai'}">
-      ${m.role==='assistant'?`<div class="msg-agent">${AGENTS_DEF.find(a=>a.id===agentId)?.icon} ${AGENTS_DEF.find(a=>a.id===agentId)?.name}</div>`:''}
-      <div>${m.text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div>
-      <div class="msg-time">${m.time}</div>
-    </div>`).join('');
-  msgsEl.scrollTop=msgsEl.scrollHeight;
-}
+  execAddLog('🚀 Pipeline BNDU.ia iniciado — Ciclo completo de recuperação',null);
+  execAddLog(`🚗 Veículo: ${SAMPLE_VEHICLE.modelo} — ${SAMPLE_VEHICLE.placa}`,null);
 
-function handleConsoleKey(e){
-  if(e.key==='Enter' && !e.shiftKey){e.preventDefault();sendToAgent();}
-}
-
-async function sendToAgent(){
-  const input=document.getElementById('console-input');
-  const text=input.value.trim();
-  if(!text) return;
-  const agent=AGENTS_DEF.find(a=>a.id===STATE.selectedAgent);
-  const time=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  STATE.agentMessages[STATE.selectedAgent].push({role:'user',text,time});
-  input.value='';
-  renderAgentMessages(STATE.selectedAgent);
-  const msgsEl=document.getElementById('console-msgs');
-  const loader=document.createElement('div');
-  loader.className='console-loading';
-  loader.innerHTML='<span></span><span></span><span></span>';
-  loader.id='loading-indicator';
-  msgsEl.appendChild(loader);
-  msgsEl.scrollTop=msgsEl.scrollHeight;
-  document.getElementById('console-send-btn').disabled=true;
-  let reply='';
-  if(STATE.apiKey && STATE.apiKey.trim()!==''){
-    try{
-      const caseLines=CASES.map(c=>
-        '['+c.id+'] '+c.veiculo.marca+' '+c.veiculo.modelo+' '+c.veiculo.ano+
-        ' | Devedor: '+c.devedor.nome+
-        ' | Divida: '+fmtCurrency(c.valorDivida)+
-        ' | FIPE: '+fmtCurrency(c.fipe)+
-        ' | Fase: '+c.stage+
-        ' | Estado: '+c.estado+
-        ' | Prioridade: '+c.prioridade
-      ).join('\n');
-      const ctx='PORTFOLIO BNDU\nTotal: '+CASES.length+' casos\nCarteira: '+fmtCurrency(CASES.reduce((s,c)=>s+c.valorDivida,0))+'\nAlta prioridade: '+CASES.filter(c=>c.prioridade==='alta').length+'\nPor fase: '+STAGES.map(s=>s.label+'='+CASES.filter(c=>c.stage===s.id).length).join(' | ')+'\n\nCASOS:\n'+caseLines;
-      const history=STATE.agentMessages[STATE.selectedAgent];
-      const messages=history.map(m=>({
-        role:m.role==='user'?'user':'assistant',
-        content:m.role==='user'?ctx+'\n\nPERGUNTA: '+m.text:m.text
-      }));
-      const cleanKey=STATE.apiKey.replace(/[^\x20-\x7E]/g,'').trim();
-      const resp=await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'x-api-key':cleanKey,
-          'anthropic-version':'2023-06-01',
-          'anthropic-dangerous-direct-browser-access':'true'
-        },
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system:agent.prompt,messages})
-      });
-      const data=await resp.json();
-      if(data.error){
-        reply='Erro Claude ('+data.error.type+'): '+data.error.message;
-      } else {
-        reply=data.content?.[0]?.text||'Resposta vazia.';
-      }
-    } catch(e){
-      reply='Erro de conexao: '+e.message;
+  for(const agentId of PIPELINE_ORDER){
+    if(execState.aborted) break;
+    if(agentId!==PIPELINE_ORDER[0]){
+      execState.agentStates[agentId]='waiting';
+      renderExecList();renderExecPipeline();
+      await execSleep(500);
     }
-  } else {
-    await new Promise(r=>setTimeout(r,1000+Math.random()*600));
-    reply=getSimulatedResponse(STATE.selectedAgent,text)+'\n\n---\nModo simulado. Configure sua chave Claude para respostas reais.';
+    await execRunAgent(agentId);
+    await execSleep(300);
   }
-  document.getElementById('loading-indicator')?.remove();
-  STATE.agentMessages[STATE.selectedAgent].push({role:'assistant',text:reply,time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});
-  renderAgentMessages(STATE.selectedAgent);
-  document.getElementById('console-send-btn').disabled=false;
-}
 
-
-function getSimulatedResponse(agentId,query){
-  const q=query.toLowerCase();
-  const alta=CASES.filter(c=>c.prioridade==='alta');
-  const emLeilao=CASES.filter(c=>['leilao','avaliacao'].includes(c.stage));
-  const inadimp=CASES.filter(c=>c.stage==='inadimplencia');
-  
-  const responses={
-    supervisor:{
-      urgente:`**Análise de Urgências — Portfólio BNDU**\n\n🔴 **${alta.length} casos de alta prioridade** identificados:\n${alta.slice(0,3).map(c=>`• ${c.id} — ${c.veiculo.marca} ${c.veiculo.modelo} — Dívida: ${fmtCurrency(c.valorDivida)} — Fase: ${STAGES.find(s=>s.id===c.stage)?.label}`).join('\n')}\n\n**Ações recomendadas:**\n1. Acionar Legal Agent para ${CASES.filter(c=>c.stage==='execucao').length} casos em execução judicial\n2. Pricing Agent deve recalcular lances para ${emLeilao.length} lotes\n3. Finance Agent: sanitizar débitos de ${CASES.filter(c=>c.stage==='sanitizacao').length} veículos\n\nLead time médio atual: ${Math.round(CASES.reduce((s,c)=>s+Math.floor((new Date()-new Date(c.dInicio))/86400000),0)/CASES.length)} dias`,
-      default:`**Análise do Portfólio BNDU**\n\nBaseado nos dados atuais:\n\n📊 **${CASES.length} casos ativos** no portfólio\n💰 **Carteira total:** ${fmtCurrency(CASES.reduce((s,c)=>s+c.valorDivida,0))}\n🔨 **Potencial de recuperação imediata:** ${fmtCurrency(emLeilao.reduce((s,c)=>s+c.fipe*0.8,0))} (${emLeilao.length} lotes em leilão)\n\n**Prioridades desta semana:**\n1. ${inadimp.length} contratos novos precisam de notificação extrajudicial\n2. Acompanhar ${CASES.filter(c=>c.stage==='execucao').length} liminares em andamento no PJe\n3. Confirmar datas dos próximos leilões com Auction Agent\n\nPosso detalhar qualquer área específica.`
-    },
-    pricing:{
-      default:`**Análise de Precificação — ${emLeilao.length} Ativos em Leilão**\n\n${emLeilao.slice(0,4).map(c=>`**${c.veiculo.marca} ${c.veiculo.modelo} ${c.veiculo.ano}** (${c.id})\n• FIPE atual: ${fmtCurrency(c.fipe)}\n• Lance mínimo recomendado: ${fmtCurrency(Math.round(c.fipe*0.8))}\n• Margem de negociação: até ${fmtCurrency(Math.round(c.fipe*0.72))}`).join('\n\n')}\n\n**Estratégia recomendada:** Publicar no Superbid Exchange + BIDchain simultaneamente para maximizar competição. Reajustar lances semanalmente se não houver arremate.`
-    },
-    legal:{
-      default:`**Status Jurídico — Portfólio BNDU**\n\n⚖️ **${CASES.filter(c=>c.stage==='execucao').length} processos em tramitação**\n\n**Marco Legal das Garantias (Lei 14.711/23):**\nA busca e apreensão extrajudicial já é juridicamente viável. Para acioná-la:\n1. Notificação via Cartório de Registro de Títulos e Documentos\n2. Inserção de restrição no RENAVAM (via Detran)\n3. Expedição de certidão pelo Cartório\n\nVantagem: **reduz prazo de 45 para ~7 dias** comparado à via judicial.\n\n**Casos prioritários para B&A extrajudicial:**\n${CASES.filter(c=>c.stage==='execucao').slice(0,3).map(c=>`• ${c.id} — ${c.veiculo.placa} — ${c.estado}`).join('\n')}`
-    }
-  };
-  
-  const agentResps=responses[agentId]||responses.supervisor;
-  if(q.includes('urgent')||q.includes('atenção')||q.includes('priorit')||q.includes('crítico')){
-    return agentResps.urgente||agentResps.default;
+  if(!execState.aborted){
+    execAddLog('🏁 Pipeline completo — Veículo vendido e caso encerrado!',null);
+    execState.pipelineDone=true;
   }
-  return agentResps.default;
+  execState.running=false;
+  execState.activeAgent=null;
+  renderExecActions();renderExecPipeline();renderExecKPIs();
 }
 
-function openAgent(agentId){
-  navigate('agents');
-  setTimeout(()=>selectAgent(agentId),100);
+async function execRunSingle(agentId){
+  execState.aborted=false;
+  execState.running=true;
+  execState.pipelineDone=false;
+  execState.globalLog=[];
+  execState.elapsedDays=0;
+  execState.outputs={};
+  AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
+  renderExecActions();renderExecList();renderExecPipeline();renderExecKPIs();renderExecLog();
+
+  await execRunAgent(agentId);
+  execState.running=false;
+  execState.activeAgent=null;
+  renderExecActions();renderExecPipeline();renderExecKPIs();
 }
+
+function execStop(){
+  execState.aborted=true;
+  execState.running=false;
+  execState.activeAgent=null;
+  renderExecActions();renderExecPipeline();
+}
+
+function selectAgent(agentId){ execSelectAgent(agentId); }
+function openAgent(agentId){ navigate('agents'); setTimeout(()=>execSelectAgent(agentId),100); }
 
 // ══════════════════════════════════════
 //  LEILÃO
