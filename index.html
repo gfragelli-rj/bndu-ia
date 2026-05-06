@@ -2486,6 +2486,7 @@ function renderPanelActions(c){
   const actions=document.getElementById('panel-actions');
   
   let btns='';
+  btns+=`<button class="action-btn" onclick="launchPipelineForCase('${c.id}')" style="background:linear-gradient(135deg,rgba(0,196,232,.15),rgba(139,92,246,.15));border:1.5px solid var(--cyan);color:var(--cyan);font-family:'Syne',sans-serif;font-weight:700;letter-spacing:-.02em;">🚀 Executar Pipeline com Agentes de IA</button>`;
   if(nextStage){
     btns+=`<button class="action-btn action-btn-primary" onclick="advanceCase('${c.id}')">▶ Avançar para ${nextStage.label}</button>`;
   } else {
@@ -2493,7 +2494,7 @@ function renderPanelActions(c){
   }
   btns+=`<button class="blip-shortcut-btn full" onclick="openBlipForCase('${c.id}',event)">💬 Abrir Blip Hub — Conversas deste Caso</button>`;
   btns+=`<div class="action-btn-row">
-    <button class="action-btn action-btn-secondary" onclick="askAgentAboutCase('${c.id}')">🤖 Perguntar ao Agente</button>
+    <button class="action-btn action-btn-secondary" onclick="goToAgentsForCase('${c.id}')">🤖 Ver Agentes</button>
     <button class="action-btn action-btn-secondary" onclick="showToast('info','📋 Relatório do caso exportado')">📄 Exportar</button>
   </div>`;
   if(['inadimplencia','negociacao'].includes(c.stage)){
@@ -2538,15 +2539,50 @@ function escalateCase(id){
 }
 
 function askAgentAboutCase(id){
-  navigate('agents');
-  setTimeout(()=>execSelectAgent('supervisor'),100);
+  goToAgentsForCase(id);
 }
 
 // ══════════════════════════════════════
 //  AI AGENTS — EXECUTION DEMO
 // ══════════════════════════════════════
-const SAMPLE_VEHICLE = {placa:'ABC-1D23',modelo:'VW Polo 1.0 TSI',ano:'2022/2023',cor:'Prata',chassi:'9BWZZZ377VT004251',contrato:'FC-2024-00891',devedor:'Carlos M. Silva',divida:'R$ 45.230,00'};
-let execState = {mode:'pipeline',running:false,pipelineDone:false,selectedAgent:'legal',activeAgent:null,agentStates:{},completedTasks:{},outputs:{},globalLog:[],elapsedDays:0,aborted:false};
+let execState = {mode:'pipeline',running:false,pipelineDone:false,selectedAgent:'legal',activeAgent:null,agentStates:{},completedTasks:{},outputs:{},globalLog:[],elapsedDays:0,aborted:false,caseId:null};
+
+function getExecCase(){
+  if(!execState.caseId) return null;
+  return CASES.find(c=>c.id===execState.caseId)||null;
+}
+
+function launchPipelineForCase(caseId){
+  execState.caseId=caseId;
+  execState.running=false;
+  execState.pipelineDone=false;
+  execState.elapsedDays=0;
+  execState.outputs={};
+  execState.globalLog=[];
+  execState.selectedAgent='legal';
+  execState.activeAgent=null;
+  execState.aborted=false;
+  AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
+  closePanel();
+  navigate('agents');
+  setTimeout(()=>{renderAgents();execRunPipeline();},200);
+}
+
+function goToAgentsForCase(caseId){
+  execState.caseId=caseId;
+  execState.running=false;
+  execState.pipelineDone=false;
+  execState.elapsedDays=0;
+  execState.outputs={};
+  execState.globalLog=[];
+  execState.selectedAgent='legal';
+  execState.activeAgent=null;
+  execState.aborted=false;
+  AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
+  closePanel();
+  navigate('agents');
+  setTimeout(()=>renderAgents(),200);
+}
 AGENTS_DEF.forEach(a=>{execState.agentStates[a.id]='idle';execState.completedTasks[a.id]=0;});
 
 function renderAgents(){
@@ -2562,8 +2598,12 @@ function renderAgents(){
 function renderExecVehicle(){
   const el=document.getElementById('exec-vehicle-card');
   if(!el) return;
-  const v=SAMPLE_VEHICLE;
-  el.innerHTML=`<div class="exec-veh-header"><span style="font-size:24px">🚗</span><div><div class="exec-veh-title">${v.modelo}</div><div class="exec-veh-sub">${v.placa} · ${v.ano} · ${v.cor}</div></div></div><div class="exec-veh-grid"><div><div class="exec-veh-label">Chassi</div><div class="exec-veh-value">${v.chassi}</div></div><div><div class="exec-veh-label">Contrato</div><div class="exec-veh-value">${v.contrato}</div></div><div><div class="exec-veh-label">Devedor</div><div class="exec-veh-value">${v.devedor}</div></div><div><div class="exec-veh-label">Dívida</div><div class="exec-veh-value">${v.divida}</div></div></div>`;
+  const c=getExecCase();
+  if(!c){
+    el.innerHTML=`<div style="text-align:center;padding:20px 10px"><div style="font-size:28px;margin-bottom:8px">📋</div><div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:6px">Nenhum caso selecionado</div><div style="font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:12px">Vá ao Portfólio de Casos, abra um caso e clique em <strong>Executar Pipeline</strong></div><button class="exec-mode-btn active" onclick="navigate('portfolio')" style="width:100%">📋 Ir para Portfólio</button></div>`;
+    return;
+  }
+  el.innerHTML=`<div class="exec-veh-header"><span style="font-size:24px">🚗</span><div><div class="exec-veh-title">${c.veiculo.marca} ${c.veiculo.modelo} ${c.veiculo.ano}</div><div class="exec-veh-sub">${c.veiculo.placa} · ${c.veiculo.cor}</div></div><div style="margin-left:auto;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;font-family:'IBM Plex Mono',monospace;background:rgba(0,196,232,.1);color:var(--cyan);border:1px solid rgba(0,196,232,.2)">${c.id}</div></div><div class="exec-veh-grid"><div><div class="exec-veh-label">Chassi</div><div class="exec-veh-value" style="font-size:10.5px;font-family:'IBM Plex Mono',monospace">${c.veiculo.chassi}</div></div><div><div class="exec-veh-label">Contrato</div><div class="exec-veh-value">${c.contrato}</div></div><div><div class="exec-veh-label">Devedor</div><div class="exec-veh-value">${c.devedor.nome}</div></div><div><div class="exec-veh-label">Dívida</div><div class="exec-veh-value" style="color:var(--amber)">${fmtCurrency(c.valorDivida)}</div></div><div><div class="exec-veh-label">FIPE</div><div class="exec-veh-value" style="color:var(--cyan)">${fmtCurrency(c.fipe)}</div></div><div><div class="exec-veh-label">Fase Atual</div><div class="exec-veh-value">${(STAGES.find(s=>s.id===c.stage)||{}).label||c.stage}</div></div></div>`;
 }
 
 function renderExecList(){
@@ -2646,8 +2686,10 @@ function renderExecTaskPanel(){
   const pillText=st==='running'?'Executando':st==='done'?'Concluído':st==='waiting'?'Aguardando':'Idle';
 
   let actionBtn='';
-  if(execState.mode==='single' && !execState.running && st==='idle'){
+  if(execState.mode==='single' && !execState.running && st==='idle' && getExecCase()){
     actionBtn=`<button class="exec-run-agent-btn" onclick="execRunSingle('${a.id}')" style="border-color:${accentColor};color:${accentColor}">▶ Executar ${a.name}</button>`;
+  } else if(execState.mode==='single' && !execState.running && !getExecCase()){
+    actionBtn=`<button class="exec-run-agent-btn" onclick="navigate('portfolio')" style="border-color:var(--amber);color:var(--amber)">📋 Selecionar um caso no Portfólio</button>`;
   }
 
   el.innerHTML=`
@@ -2673,7 +2715,7 @@ function renderExecLog(){
   if(!el) return;
   if(countEl) countEl.textContent=execState.globalLog.length;
   if(execState.globalLog.length===0){
-    el.innerHTML=`<div class="exec-log-empty">${execState.mode==='pipeline'?'Clique "Executar Pipeline" para iniciar':'Clique em um agente para executar'}</div>`;
+    el.innerHTML=`<div class="exec-log-empty">${!getExecCase()?'Selecione um caso no Portfólio para iniciar':execState.mode==='pipeline'?'Clique "Executar Pipeline" para iniciar':'Clique em um agente para executar'}</div>`;
     return;
   }
   el.innerHTML=execState.globalLog.map((l,i)=>{
@@ -2692,7 +2734,11 @@ function renderExecActions(){
   if(execState.mode==='pipeline'){
     if(execState.running){
       html+=`<button class="exec-run-btn stop" onclick="execStop()">⏹ Parar</button>`;
+    } else if(!getExecCase()){
+      html+=`<button class="exec-run-btn" onclick="navigate('portfolio')" style="border-color:var(--amber);color:var(--amber)">📋 Selecionar Caso</button>`;
     } else {
+      const ec=getExecCase();
+      html+=`<span style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-right:6px">${ec.id}</span>`;
       html+=`<button class="exec-run-btn" onclick="execRunPipeline()">▶ Executar Pipeline</button>`;
     }
   }
@@ -2739,13 +2785,51 @@ async function execRunAgent(agentId){
     if(execState.aborted) return;
     execState.completedTasks[agentId]=i;
     renderExecList();renderExecTaskPanel();renderExecKPIs();
-    execAddLog(`${agent.icon} ${agent.execTasks[i].label}`,agentId);
+    let taskLabel=agent.execTasks[i].label;
+    // Enrich certain log entries with case data
+    const tc=getExecCase();
+    if(tc){
+      if(agentId==='legal'&&i===1) taskLabel=`Liminar deferida detectada — ${tc.id} ${tc.veiculo.marca} ${tc.veiculo.modelo}`;
+      if(agentId==='compliance'&&i===1) taskLabel=`OCR processando chassi: ${tc.veiculo.chassi}`;
+      if(agentId==='compliance'&&i===2) taskLabel=`Confrontando chassi com contrato #${tc.contrato}...`;
+      if(agentId==='pricing'&&i===1) taskLabel=`FIPE referência: ${fmtCurrency(tc.fipe)} (${tc.veiculo.marca} ${tc.veiculo.modelo} ${tc.veiculo.ano})`;
+      if(agentId==='pricing'&&i===6) taskLabel=`✅ Preço de reserva definido: ${fmtCurrency(Math.round(tc.fipe*0.8))}`;
+      if(agentId==='tax'&&i===4){const td=tc.debitos.ipva+tc.debitos.multas+tc.debitos.taxas; taskLabel=`Total consolidado: ${fmtCurrency(td)}`;}
+      if(agentId==='auction'&&i===7) taskLabel=`Lance vencedor: ${fmtCurrency(Math.round(tc.fipe*0.8*1.09))} — Arrematante #${Math.floor(Math.random()*9000+1000)}`;
+    }
+    execAddLog(`${agent.icon} ${taskLabel}`,agentId);
     await execSleep(agent.execTasks[i].duration*0.55);
   }
 
   execState.completedTasks[agentId]=agent.execTasks.length;
   execState.agentStates[agentId]='done';
-  execState.outputs[agentId]=agent.output;
+  // Build output, enriching with actual case data when available
+  let agentOutput=Object.assign({},agent.output);
+  const ec=getExecCase();
+  if(ec){
+    if(agentId==='legal') agentOutput.processo=`${ec.contrato} — ${ec.estado}`;
+    if(agentId==='compliance') agentOutput.chassi=ec.veiculo.chassi;
+    if(agentId==='tax'){
+      const td=ec.debitos.ipva+ec.debitos.multas+ec.debitos.taxas;
+      agentOutput.totalDebitos=fmtCurrency(td);
+      agentOutput.ipva=fmtCurrency(ec.debitos.ipva);
+      agentOutput.multas=fmtCurrency(ec.debitos.multas);
+    }
+    if(agentId==='pricing'){
+      agentOutput.fipe=fmtCurrency(ec.fipe);
+      const reserva=Math.round(ec.fipe*0.8);
+      agentOutput.precoReserva=fmtCurrency(reserva);
+      agentOutput.intervaloConfianca=fmtCurrency(Math.round(reserva*0.95))+' — '+fmtCurrency(Math.round(reserva*1.05));
+    }
+    if(agentId==='auction'){
+      const reserva=Math.round(ec.fipe*0.8);
+      const lance=Math.round(reserva*1.09);
+      agentOutput.lanceVencedor=fmtCurrency(lance);
+      const margem=((lance/reserva-1)*100).toFixed(1);
+      agentOutput.margem=`+${margem}% sobre reserva`;
+    }
+  }
+  execState.outputs[agentId]=agentOutput;
   const impactMatch=(agent.impact||'').match(/(\d+)/);
   execState.elapsedDays+=parseInt(impactMatch?impactMatch[1]:'3');
   execAddLog(`✅ ${agent.name} concluído — Impacto: ${agent.impact}`,agentId);
@@ -2763,7 +2847,9 @@ async function execRunPipeline(){
   renderExecActions();renderExecList();renderExecPipeline();renderExecKPIs();renderExecLog();
 
   execAddLog('🚀 Pipeline BNDU.ia iniciado — Ciclo completo de recuperação',null);
-  execAddLog(`🚗 Veículo: ${SAMPLE_VEHICLE.modelo} — ${SAMPLE_VEHICLE.placa}`,null);
+  const pCase=getExecCase();
+  if(pCase) execAddLog(`🚗 ${pCase.id} — ${pCase.veiculo.marca} ${pCase.veiculo.modelo} — ${pCase.veiculo.placa}`,null);
+  else execAddLog('🚗 Veículo de demonstração',null);
 
   for(const agentId of PIPELINE_ORDER){
     if(execState.aborted) break;
@@ -2777,7 +2863,13 @@ async function execRunPipeline(){
   }
 
   if(!execState.aborted){
-    execAddLog('🏁 Pipeline completo — Veículo vendido e caso encerrado!',null);
+    const doneCase=getExecCase();
+    if(doneCase){
+      doneCase.historico.push({data:new Date().toISOString().split('T')[0],texto:`Pipeline BNDU.ia completo — ${execState.elapsedDays} dias economizados. Veículo vendido e caso encerrado.`,agente:'Supervisor Agent'});
+      execAddLog(`🏁 Pipeline completo — ${doneCase.id} ${doneCase.veiculo.marca} ${doneCase.veiculo.modelo} vendido e encerrado!`,null);
+    } else {
+      execAddLog('🏁 Pipeline completo — Veículo vendido e caso encerrado!',null);
+    }
     execState.pipelineDone=true;
   }
   execState.running=false;
