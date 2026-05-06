@@ -1131,9 +1131,6 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
           <span class="nav-icon">📋</span><span class="nav-label">Portfólio de Casos</span>
           <span class="nav-badge" id="portfolio-badge">0</span>
         </div>
-        <div class="nav-item" onclick="navigate('leilao')" id="nav-leilao">
-          <span class="nav-icon">🔨</span><span class="nav-label">Leilão & Pricing</span>
-        </div>
       </div>
       <div class="nav-section">
         <div class="nav-section-label">Inteligência</div>
@@ -1303,39 +1300,6 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--tex
             <div class="bh-list-body" id="bh-list-body"></div>
           </div>
           <div class="bh-window" id="bh-window"></div>
-        </div>
-      </div>
-
-      <!-- ── LEILÃO VIEW ── -->
-      <div class="view" id="view-leilao">
-        <div class="auction-layout">
-          <div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-              <div>
-                <div class="section-title">Lotes para Leilão</div>
-                <div class="section-sub">Veículos em fase de avaliação e leilão</div>
-              </div>
-              <button class="header-btn header-btn-primary" onclick="scheduleAuction()">+ Programar Leilão</button>
-            </div>
-            <div id="auction-lots-list"></div>
-          </div>
-          <div>
-            <div class="auction-pricing-card" id="pricing-calculator">
-              <div class="pricing-header">
-                <div>
-                  <div class="section-title">🤖 Pricing Inteligente</div>
-                  <div class="section-sub">FIPE + mercado secundário</div>
-                </div>
-                <button class="header-btn" onclick="recalcPricing()">↻ Recalcular</button>
-              </div>
-              <div id="pricing-content">
-                <div class="empty-state">
-                  <div class="empty-state-icon">💰</div>
-                  <div class="empty-state-text">Selecione um lote para calcular o preço ideal</div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -1842,7 +1806,6 @@ function doLogin(){
   renderDashboard();
   renderPortfolio();
   renderAgents();
-  renderLeilao();
   renderRelatorios();
   renderIntegracoes();
   renderBlipHub();
@@ -1883,7 +1846,6 @@ function navigate(view){
     dashboard:['Dashboard','Visão geral do portfólio BNDU'],
     portfolio:['Portfólio de Casos','Gestão do ciclo D+0 a D+80'],
     agents:['Agentes de IA','Console de orquestração inteligente'],
-    leilao:['Leilão & Pricing','Gestão de lotes e precificação dinâmica'],
     relatorios:['Relatórios','Analytics e KPIs avançados'],
     integracoes:['Integrações','Status das conexões com sistemas externos'],
     configuracoes:['Configurações','Preferências e configurações da plataforma'],
@@ -2953,90 +2915,6 @@ function selectAgent(agentId){ execSelectAgent(agentId); }
 function openAgent(agentId){ navigate('agents'); setTimeout(()=>execSelectAgent(agentId),100); }
 
 // ══════════════════════════════════════
-//  LEILÃO
-// ══════════════════════════════════════
-function renderLeilao(){
-  const leilaoCases=CASES.filter(c=>['avaliacao','leilao'].includes(c.stage));
-  const lotsHTML=leilaoCases.map(c=>{
-    const isLive=c.stage==='leilao';
-    const lance=Math.round(c.fipe*0.8);
-    return `<div class="auction-lot" onclick="showPricing('${c.id}')">
-      <div class="auction-lot-header">
-        <div class="auction-lot-id">${c.id} · Lote #${c.id.replace('BND-','')}</div>
-        <div class="auction-lot-status ${isLive?'lot-live':'lot-scheduled'}">${isLive?'🟢 PUBLICADO':'⏳ AGENDADO'}</div>
-      </div>
-      <div class="auction-lot-model">${c.veiculo.marca} ${c.veiculo.modelo}</div>
-      <div class="auction-lot-info">${c.veiculo.ano} · ${c.veiculo.cor} · ${c.veiculo.placa} · ${c.estado}</div>
-      <div class="auction-lot-prices">
-        <div class="auction-lot-price">
-          <div class="auction-lot-price-label">FIPE</div>
-          <div class="auction-lot-price-val" style="color:var(--cyan);font-size:14px;">${fmtCurrency(c.fipe)}</div>
-        </div>
-        <div class="auction-lot-price">
-          <div class="auction-lot-price-label">Lance Mínimo</div>
-          <div class="auction-lot-price-val">${fmtCurrency(lance)}</div>
-        </div>
-        <div class="auction-lot-price">
-          <div class="auction-lot-price-label">Dívida</div>
-          <div class="auction-lot-price-val" style="color:var(--text2);font-size:14px;">${fmtCurrency(c.valorDivida)}</div>
-        </div>
-      </div>
-      <div class="auction-lot-actions">
-        <button class="blip-shortcut-btn sm" onclick="openBlipForCase('${c.id}',event)">💬 Contatar Leiloeira via Blip</button>
-        <button class="blip-shortcut-btn sm" onclick="openCaseById('${c.id}');event.stopPropagation()">📋 Ver Caso</button>
-      </div>
-    </div>`;
-  }).join('');
-  
-  document.getElementById('auction-lots-list').innerHTML=lotsHTML||`<div class="empty-state"><div class="empty-state-icon">🔨</div><div class="empty-state-text">Nenhum lote disponível para leilão</div></div>`;
-}
-
-function showPricing(id){
-  const c=CASES.find(x=>x.id===id);
-  if(!c) return;
-  const debTotal=c.debitos.ipva+c.debitos.dpvat+c.debitos.multas+c.debitos.taxas;
-  const custosCustodia=Math.round(45*30); // 30 dias custódia a R$45/dia
-  const lanceMinimoIdeal=Math.round((c.fipe-debTotal-custosCustodia)*0.85);
-  const lanceConservador=Math.round(c.fipe*0.75);
-  
-  document.getElementById('pricing-content').innerHTML=`
-    <div style="margin-bottom:12px;padding:10px 12px;background:var(--bg3);border-radius:7px;">
-      <div style="font-size:12px;color:var(--text3);margin-bottom:4px;">Veículo Selecionado</div>
-      <div style="font-weight:700;">${c.veiculo.marca} ${c.veiculo.modelo} ${c.veiculo.ano}</div>
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--cyan);">${c.veiculo.placa}</div>
-    </div>
-    <div class="ai-recom">
-      <span class="ai-recom-icon">🤖</span>
-      <div class="ai-recom-text">Análise FIPE + mercado secundário (OLX, Webmotors). <strong>Lance ideal: ${fmtCurrency(lanceMinimoIdeal)}</strong> — maximiza recuperação sem sacrificar liquidez.</div>
-    </div>
-    <div class="price-breakdown">
-      <div class="price-row"><span class="price-row-label">FIPE Tabela</span><span class="price-row-val fipe">${fmtCurrency(c.fipe)}</span></div>
-      <div class="price-row"><span class="price-row-label">(-) Débitos DETRAN/SEFAZ</span><span class="price-row-val deduction">-${fmtCurrency(debTotal)}</span></div>
-      <div class="price-row"><span class="price-row-label">(-) Custos de custódia</span><span class="price-row-val deduction">-${fmtCurrency(custosCustodia)}</span></div>
-      <div class="price-row"><span class="price-row-label">(-) Comissão leiloeiro (5%)</span><span class="price-row-val deduction">-${fmtCurrency(Math.round(c.fipe*0.05))}</span></div>
-      <div class="price-row highlight"><span class="price-row-label">🎯 Lance Mínimo Ideal</span><span class="price-row-val minimum">${fmtCurrency(lanceMinimoIdeal)}</span></div>
-      <div class="price-row"><span class="price-row-label">Lance Conservador (75% FIPE)</span><span class="price-row-val" style="color:var(--text2);">${fmtCurrency(lanceConservador)}</span></div>
-    </div>
-    <button class="action-btn action-btn-primary" onclick="publishAuction('${id}')">🔨 Publicar no Superbid Exchange</button>
-    <button class="action-btn action-btn-secondary" style="margin-top:8px;" onclick="showToast('info','📋 Também publicando no BIDchain...')">+ Publicar no BIDchain</button>`;
-}
-
-function recalcPricing(){ showToast('info','🤖 Pricing Agent recalculando valores...'); setTimeout(()=>showToast('success','✅ Precificação atualizada com dados FIPE e mercado'),1500); }
-
-function scheduleAuction(){ showToast('info','📅 Abrindo agenda de leilões...'); }
-
-function publishAuction(id){
-  const c=CASES.find(x=>x.id===id);
-  if(c){
-    c.stage='leilao';
-    c.historico.push({data:new Date().toISOString().split('T')[0],texto:'Lote publicado no Superbid Exchange — leilão em 5 dias',agente:'Auction Agent'});
-    showToast('success',`🔨 Lote ${id} publicado com sucesso no Superbid Exchange!`);
-    renderLeilao();
-    renderDashboard();
-  }
-}
-
-// ══════════════════════════════════════
 //  RELATÓRIOS
 // ══════════════════════════════════════
 function renderRelatorios(){
@@ -3287,8 +3165,8 @@ const ROLE_CONFIG = {
   },
   leiloeiro: {
     color:'var(--amber)', label:'Leiloeiro Parceiro',
-    nav:['leilao'],
-    defaultView:'leilao', hideCPF:true, approver:false,
+    nav:['portfolio'],
+    defaultView:'portfolio', hideCPF:true, approver:false,
     stageFilter:['avaliacao','leilao']
   }
 };
@@ -3306,7 +3184,7 @@ function applyRBACLayout() {
   if (roleEl) roleEl.style.color = cfg.color;
 
   // 3. Show/hide nav items
-  ['dashboard','portfolio','leilao','vin360','agents','bliphub',
+  ['dashboard','portfolio','vin360','agents','bliphub',
    'relatorios','integracoes','configuracoes'].forEach(id => {
     const el = document.getElementById('nav-' + id);
     if (el) el.style.display = cfg.nav.includes(id) ? '' : 'none';
@@ -3337,14 +3215,14 @@ function applyRBACLayout() {
 }
 
 function injectLeiloeiroBanner() {
-  const view = document.getElementById('view-leilao');
+  const view = document.getElementById('view-portfolio');
   if (!view || document.getElementById('leiloeiro-banner')) return;
   const d = document.createElement('div');
   d.id = 'leiloeiro-banner';
   d.className = 'leiloeiro-banner';
   d.innerHTML = '<span style="font-size:22px">🏷️</span>'
     + '<div><div style="font-family:Syne,sans-serif;font-size:13px;font-weight:700;color:var(--amber)">Portal do Leiloeiro — Acesso Restrito</div>'
-    + '<div style="font-size:11px;color:var(--text3);margin-top:2px">Você visualiza apenas lotes disponíveis. Dados do devedor são ocultados por política do banco.</div></div>';
+    + '<div style="font-size:11px;color:var(--text3);margin-top:2px">Você visualiza apenas lotes em fase de avaliação ou leilão. Dados do devedor são ocultados por política do banco.</div></div>';
   view.prepend(d);
 }
 
